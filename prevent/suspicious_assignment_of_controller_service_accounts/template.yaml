@@ -1,0 +1,67 @@
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: privescassignpowerfulsa
+spec:
+  crd:
+    spec:
+      names:
+        kind: PrivEscAssignPowerfulSA
+      validation:
+        # Schema for the `parameters` field
+        openAPIV3Schema:
+          properties:
+            forbiddenSAs:
+              type: array
+              items:
+                type: object
+                properties: 
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package privescassignpowerfulsa
+        operations = {"CREATE", "UPDATE"}
+        violation[{"msg": msg, "details": {}}] {
+          operations[input.review.operation]
+          podSpec := getPodSpec(input.review.object)
+          sa := podSpec.serviceAccountName
+          ns := input.review.object.metadata.namespace
+          isForbiddenSA(sa, ns, input.parameters.forbiddenSAs)
+          msg := sprintf("Forbidden: cannot assign the '%v:%v' SA to a pod", [ns, sa])
+        }
+
+        isForbiddenSA(sa, ns, forbiddenSAs) {
+          forbiddenSA := forbiddenSAs[_]
+          sa == forbiddenSA.name
+          ns == forbiddenSA.namespace
+        }
+
+        getPodSpec(obj) = spec {
+          obj.kind == "Pod"
+          spec := obj.spec
+        } {
+          obj.kind == "CronJob"
+          spec := obj.spec.jobTemplate.spec.template.spec
+        } {
+          obj.kind == "ReplicaSet"
+          spec := obj.spec.template.spec
+        } {
+          obj.kind == "ReplicationController"
+          spec := obj.spec.template.spec
+        } {
+          obj.kind == "Deployment"
+          spec := obj.spec.template.spec
+        } {
+          obj.kind == "StatefulSet"
+          spec := obj.spec.template.spec
+        } {
+          obj.kind == "DaemonSet"
+          spec := obj.spec.template.spec
+        } {
+          obj.kind == "Job"
+          spec := obj.spec.template.spec
+        }

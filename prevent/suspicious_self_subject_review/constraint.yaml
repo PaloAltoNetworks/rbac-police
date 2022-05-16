@@ -1,0 +1,17 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: SuspiciousSelfSubjectReview
+metadata:
+  name: detect-automated-identities-querying-permissions
+spec:
+  enforcementAction: deny
+  match:
+    kinds:
+      - apiGroups: ["authorization.k8s.io"]
+        kinds:
+          - SelfSubjectRulesReview
+          - SelfSubjectAccessReview
+  parameters:
+    # Allow requests from certain users, e.g. "system:serviceaccount:my-priv-ns:my-priv-sa" or "system:node:nodename"
+    allowedUsers: [""] 
+    # Allow requests from users in certain groups, e.g. "system:nodes", "system:serviceaccounts:privileged-ns"
+    allowedGroups: [""] 

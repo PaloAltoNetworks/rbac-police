@@ -1,0 +1,78 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: PrivEscAssignPowerfulSA
+metadata:
+  name: prevent-pods-with-powerful-serviceaccounts
+spec:
+  enforcementAction: deny
+  match:
+    kinds:
+      - apiGroups: ["", "apps", "batch"]
+        kinds:
+          - Pod
+          - CronJob
+          - ReplicaSet
+          - ReplicationController
+          - Deployment
+          - StatefulSet
+          - DaemonSet
+          - Job
+    namespaces: ["kube-system"] # should contain all namespaces specified under forbiddenSAs
+  parameters:
+    forbiddenSAs:
+    # Not every controller SA is powerful, but there's no reason 
+    # for either of them to be assigned to a pod
+      - name: attachdetach-controller 
+        namespace: kube-system
+      - name: certificate-controller
+        namespace: kube-system
+      - name: clusterrole-aggregation-controller
+        namespace: kube-system
+      - name: cronjob-controller
+        namespace: kube-system
+      - name: daemon-set-controller
+        namespace: kube-system
+      - name: deployment-controller
+        namespace: kube-system
+      - name: disruption-controller
+        namespace: kube-system
+      - name: endpoint-controller
+        namespace: kube-system
+      - name: endpointslice-controller
+        namespace: kube-system
+      - name: endpointslicemirroring-controller
+        namespace: kube-system
+      - name: ephemeral-volume-controller
+        namespace: kube-system
+      - name: expand-controller
+        namespace: kube-system
+      - name: job-controller
+        namespace: kube-system
+      - name: namespace-controller
+        namespace: kube-system
+      - name: node-controller
+        namespace: kube-system
+      - name: pod-garbage-controller
+        namespace: kube-system
+      - name: pv-protection-controller
+        namespace: kube-system
+      - name: pvc-protection-controller
+        namespace: kube-system
+      - name: replicaset-controller
+        namespace: kube-system
+      - name: replication-controller
+        namespace: kube-system
+      - name: resourcequota-controller
+        namespace: kube-system
+      - name: service-account-controller
+        namespace: kube-system
+      - name: service-controller
+        namespace: kube-system
+      - name: statefulset-controller
+        namespace: kube-system
+      - name: ttl-after-finished-controller
+        namespace: kube-system
+      - name: ttl-controller
+        namespace: kube-system
+      - name: vpc-resource-controller
+        namespace: kube-system
+

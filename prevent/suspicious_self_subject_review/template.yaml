@@ -1,0 +1,60 @@
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: suspiciousselfsubjectreview
+spec:
+  crd:
+    spec:
+      names:
+        kind: SuspiciousSelfSubjectReview
+      validation:
+        # Schema for the `parameters` field
+        openAPIV3Schema:
+          properties:
+            allowedUsers:
+              description: Users that should be allowed to bypass the policy.
+              type: array
+              items:
+                type: string
+            allowedGroups:
+              description: Groups that should be allowed to bypass the policy.
+              type: array
+              items:
+                type: string
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package suspiciousselfsubjectreview
+        violation[{"msg": msg}] {
+          is_self_review(input.review.object.kind)
+          params := object.get(input, "parameters", {})
+          allowedUsers := object.get(params, "allowedUsers", [])
+          allowedGroups := object.get(params, "allowedGroups", [])
+          not privileged(input.review.userInfo, allowedUsers, allowedGroups)
+          user_suspicious[{"msg": msg}]
+        }
+
+        user_suspicious[{"msg": msg}] {
+          startswith(input.review.userInfo.username, "system:serviceaccount:")
+          msg := sprintf("Service account '%v' issued a suspicious %v request, querying its permissions", [input.review.userInfo.username, input.review.object.kind])
+        } {
+          startswith(input.review.userInfo.username, "system:node:")
+          msg := sprintf("Node '%v' issued a suspicious %v request, querying its permissions", [input.review.userInfo.username, input.review.object.kind])
+        }
+
+        is_self_review(kind) {
+          kind == "SelfSubjectAccessReview"
+        } {
+          kind == "SelfSubjectRulesReview"
+        }
+
+        privileged(userInfo, allowedUsers, allowedGroups) {
+          username := object.get(userInfo, "username", "")
+          allowedUsers[_] == username
+        } {
+          userGroups := object.get(userInfo, "groups", [])
+          groups := {g | g := userGroups[_]}
+          allowed := {g | g := allowedGroups[_]}
+          intersection := groups & allowed
+          count(intersection) > 0
+        }
