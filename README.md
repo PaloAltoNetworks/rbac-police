@@ -30,7 +30,7 @@ Collect and evaluate RBAC permssions in a certain namespace.
 ./rbac-police eval lib/ -n production
 ```
 ### Only alert on SAs that exist on all nodes
-Only consider violations from service accounts that exist on all nodes. Useful for identifying violating Daemonsets.
+Only consider violations from service accounts that exist on all nodes. Useful for identifying violating DaemonSets.
 ```
 ./rbac-police eval lib/ --only-sas-on-all-nodes
 ```

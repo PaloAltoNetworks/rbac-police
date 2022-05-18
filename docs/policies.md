@@ -44,7 +44,7 @@ The above options implemetned by a Rego [wrapper](../lib/utils/wrapper.rego). If
 - Severity: `Critical`
 - Violation types: `serviceAccounts, nodes, combined`
 ### [assign_sa](../lib/assign_sa.rego)
-- Description: `SAs and nodes that can create pods or create, update or patch pod controllers (e.g. Daemonsets, Deployments, Jobs) in the privileged namespaces, may assign admin-equivalent SA to a pod in their control`
+- Description: `SAs and nodes that can create pods or create, update or patch pod controllers (e.g. DaemonSets, Deployments, Jobs) in the privileged namespaces, may assign admin-equivalent SA to a pod in their control`
 - Severity: `Critical`
 - Violation types: `serviceAccounts, nodes`
 ### [bind_roles](../lib/bind_roles.rego)
