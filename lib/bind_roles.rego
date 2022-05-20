@@ -2,7 +2,7 @@ package policy
 import data.police_builtins as pb
 
 describe[{"desc": desc, "severity": severity}] {
-  desc := sprintf("SAs and nodes that can bind clusterrolebindings or bind rolebindings in the privileged namespaces (%v) can grant admin-equivalent permissions to themselves", [concat(", ", pb.privileged_namespaces)])
+  desc := sprintf("SAs and nodes that can bind clusterrolebindings or bind rolebindings in privileged namespaces (%v) can grant admin-equivalent permissions to themselves", [concat(", ", pb.privileged_namespaces)])
   severity := "Critical"
 }
 checkServiceAccounts := true

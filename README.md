@@ -1,5 +1,10 @@
 # rbac-police <img src="./docs/logo.png" width="50">
-Retrieves the RBAC permissions of serviceaccounts, pods and nodes in a Kubernetes cluster, and evaluates them using policies written in Rego.
+Retrieve the RBAC permissions of serviceAccounts, pods and nodes in a Kubernetes cluster, and evaluate them using policies written in Rego.
+
+The default policy library at [lib](./lib) includes around 20 policies that identify serviceAccounts, pods and nodes that possess risky permissions, each detecting a different attack path.
+
+See the Recommendations section [here](https://www.paloaltonetworks.com/resources/whitepapers/kubernetes-privilege-escalation-excessive-permissions-in-popular-platforms) for advice on addressing powerful permissions in Kubernetes clusters.
+
 
 ## Quick Start
 Requires [Golang](https://go.dev/doc/install)>=1.16.
@@ -9,7 +14,7 @@ Requires [Golang](https://go.dev/doc/install)>=1.16.
 go build
 ```
 2. Connect `kubectl` to a Kubernetes cluster.
-3. Evaluate RBAC permissions using the policy library.
+3. Evaluate RBAC permissions and identify privilege escalation paths in your cluster using the default policy library.
 ```shell
 ./rbac-police eval lib/
 ```

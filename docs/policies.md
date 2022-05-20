@@ -1,11 +1,10 @@
 # Policies
-Policies are Rego scripts that detect RBAC entities like serviceAccounts that match certain rule definitions. Policies  produce violations, which have 3 types:
+Policies are Rego scripts that detect identities like serviceAccounts possessing RBAC permissions that match certain rule definitions. Policies  produce violations, which have 3 types:
 - **ServiceAccounts**: Service accounts that violate the policy based on their permissions.
 - **Nodes**: Nodes that violate the policy based on their permissions.
 - **Combined**: Nodes that violate the policy, based on their permisssions and those of the serviceAccounts they host.
 
-The policy library at [lib](../lib) includes arround 20 policies
-that identify serviceAccounts, pods and nodes who can escalate privileges, each detecting a different privilege escalation technique.
+The policy library at [lib](./lib) includes around 20 policies that identify serviceAccounts, pods and nodes that possess risky permissions, each detecting a different attack path.
 
 ## Writing Custom Policies
 Policies are written in Rego, and receive input in the schema produced by `rbac-police collect`, as defined in [collect.md](./collect.md). Policies should define a `describe` rule, at least one violation type they produce, alongside one or two evaluators. Below is the [nodes_proxy](../lib/nodes_proxy.rego) policy, for example.

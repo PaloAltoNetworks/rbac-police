@@ -10,7 +10,7 @@ checkServiceAccounts := true
 checkNodes := true
 
 evaluateRoles(roles, type) {
-  rolesCanRemoveKubeSystemPods(roles)
+  rolesCanRemovePodsInPrivNS(roles)
   rolesCanMakeNodesUnschedulable(roles)
 }
 
@@ -22,7 +22,7 @@ evaluateCombined = combinedViolations {
     # Can the node or one of its SAs remove pods?
     sasCanRemovePods := { saFullName | saEntry := sasOnNode[_]; 
       saEffectiveRoles := pb.effectiveRoles(saEntry.roles)
-      rolesCanRemoveKubeSystemPods(saEffectiveRoles)
+      rolesCanRemovePodsInPrivNS(saEffectiveRoles)
       saFullName := pb.saFullName(saEntry)
     }
     nodeCanRemovePods(node.roles, sasCanRemovePods)
@@ -46,7 +46,7 @@ nodeCanRemovePods(nodeRoles, sasCanRemovePods) {
   count(sasCanRemovePods) > 0
 } {
   nodeEffectiveRoles := pb.effectiveRoles(nodeRoles)
-  rolesCanRemoveKubeSystemPods(nodeEffectiveRoles)
+  rolesCanRemovePodsInPrivNS(nodeEffectiveRoles)
 }
 
 nodeCanMakeNodesUnschedulable(nodeRoles, sasCanMakeNodesUnschedulable) {
@@ -56,7 +56,7 @@ nodeCanMakeNodesUnschedulable(nodeRoles, sasCanMakeNodesUnschedulable) {
   rolesCanMakeNodesUnschedulable(nodeEffectiveRoles)
 }
 
-rolesCanRemoveKubeSystemPods(roles) {
+rolesCanRemovePodsInPrivNS(roles) {
   role := roles[_]
   pb.affectsPrivNS(role)
   roleCanRemovePods(role)
