@@ -1,9 +1,7 @@
 # rbac-police <img src="./docs/logo.png" width="50">
 Retrieve the RBAC permissions of serviceAccounts, pods and nodes in a Kubernetes cluster, and evaluate them using policies written in Rego.
 
-The default policy library at [lib](./lib) includes around 20 policies that identify serviceAccounts, pods and nodes that possess risky permissions, each detecting a different attack path.
-
-See the Recommendations section [here](https://www.paloaltonetworks.com/resources/whitepapers/kubernetes-privilege-escalation-excessive-permissions-in-popular-platforms) for advice on addressing powerful permissions in Kubernetes clusters.
+The [default policy library](./lib) includes around 20 policies that identify serviceAccounts, pods and nodes that possess risky permissions, each detecting a different attack path. See the Recommendations section [here](https://www.paloaltonetworks.com/resources/whitepapers/kubernetes-privilege-escalation-excessive-permissions-in-popular-platforms) for advice on addressing powerful permissions in Kubernetes clusters.
 
 
 ## Quick Start
