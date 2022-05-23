@@ -64,8 +64,8 @@ Or:
 ```
 
 ## Documentation
- - [Eval command](docs/eval.md)
  - [Policies](docs/policies.md)
+ - [Eval command](docs/eval.md)
  - [Collect command](docs/collect.md)
  - [Expand command](docs/expand.md)
 

@@ -2,7 +2,7 @@ package policy
 import data.police_builtins as pb
 
 describe[{"desc": desc, "severity": severity}] {
-  desc := sprintf("SAs and nodes that can delete or evict a pod in privileged namespaces (%v) and make other nodes unschedulable can steal powerful pods from other nodes onto a compromised one", [concat(", ", pb.privileged_namespaces)])
+  desc := sprintf("SAs and nodes that can delete or evict pods in privileged namespaces (%v) and also make other nodes unschedulable can steal powerful pods from other nodes onto a compromised one", [concat(", ", pb.privileged_namespaces)])
   severity := "High"
 }
 checkCombined := true

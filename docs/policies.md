@@ -43,7 +43,7 @@ The above options implemetned by a Rego [wrapper](../lib/utils/wrapper.rego). If
 - Severity: `Critical`
 - Violation types: `serviceAccounts, nodes, combined`
 ### [assign_sa](../lib/assign_sa.rego)
-- Description: `SAs and nodes that can create pods or create, update or patch pod controllers (e.g. DaemonSets, Deployments, Jobs) in privileged namespaces, may assign admin-equivalent SA to a pod in their control`
+- Description: `SAs and nodes that can create pods or create, update or patch pod controllers (e.g. DaemonSets, Deployments, Jobs) in privileged namespaces, may assign an admin-equivalent SA to a pod in their control`
 - Severity: `Critical`
 - Violation types: `serviceAccounts, nodes`
 ### [bind_roles](../lib/bind_roles.rego)
@@ -83,7 +83,7 @@ The above options implemetned by a Rego [wrapper](../lib/utils/wrapper.rego). If
 - Severity: `Low`
 - Violation types: `serviceAccounts, nodes`
 ### [modify_pods](../lib/modify_pods.rego)
-- Description: `SAs and nodes that can update and patch pods in privileged namespaces can gain code execution on pods that are likey to be privileged`
+- Description: `SAs and nodes that can update or patch pods in privileged namespaces can gain code execution on pods that are likey to be powerful`
 - Severity: `High`
 - Violation types: `serviceAccounts, nodes`
 ### [modify_service_status_cve_2020_8554](../lib/modify_service_status_cve_2020_8554.rego)
@@ -95,7 +95,7 @@ The above options implemetned by a Rego [wrapper](../lib/utils/wrapper.rego). If
 - Severity: `High`
 - Violation types: `serviceAccounts, nodes`
 ### [obtain_token_weak_ns](../lib/obtain_token_weak_ns.rego)
-- Description: `SAs and nodes that can obtain serviceaccount tokens in unprivileged namespaces could potentially escalate privileges`
+- Description: `SAs and nodes that can retrieve or a issue SA tokens in unprivileged namespaces could potentially obtain tokens with broader permissions over the cluster`
 - Severity: `Low`
 - Violation types: `serviceAccounts, nodes`
 ### [pods_ephemeral_ctrs](../lib/pods_ephemeral_ctrs.rego)
@@ -119,10 +119,10 @@ The above options implemetned by a Rego [wrapper](../lib/utils/wrapper.rego). If
 - Severity: `Critical`
 - Violation types: `serviceAccounts, nodes`
 ### [steal_pods](../lib/steal_pods.rego)
-- Description: `SAs and nodes that can delete or evict a pod in privileged namespaces and make other nodes unschedulable can steal powerful pods from other nodes onto a compromised one`
+- Description: `SAs and nodes that can delete or evict pods in privileged namespaces and also make other nodes unschedulable can steal powerful pods from other nodes onto a compromised one`
 - Severity: `High`
 - Violation types: `serviceAccounts, nodes, combined`
 ### [token_request](../lib/token_request.rego)
-- Description: `SAs and nodes that can create TokenRequests (serviceaccounts/token) in privileged namespaces can create tokens of admin-equivalent SAs`
+- Description: `SAs and nodes that can create TokenRequests (serviceaccounts/token) in privileged namespaces can issue tokens for admin-equivalent SAs`
 - Severity: `Critical`
 - Violation types: `serviceAccounts, nodes`

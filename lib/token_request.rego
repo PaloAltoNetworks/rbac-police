@@ -2,7 +2,7 @@ package policy
 import data.police_builtins as pb
 
 describe[{"desc": desc, "severity": severity}] {
-  desc := sprintf("SAs and nodes that can create TokenRequests (serviceaccounts/token) in privileged namespaces (%v) can create tokens of admin-equivalent SAs", [concat(", ", pb.privileged_namespaces)])
+  desc := sprintf("SAs and nodes that can create TokenRequests (serviceaccounts/token) in privileged namespaces (%v) can issue tokens for admin-equivalent SAs", [concat(", ", pb.privileged_namespaces)])
   severity := "Critical"
 }
 checkServiceAccounts := true

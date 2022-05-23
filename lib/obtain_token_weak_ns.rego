@@ -2,7 +2,7 @@ package policy
 import data.police_builtins as pb
 
 describe[{"desc": desc, "severity": severity}] {
-  desc := "SAs and nodes that can obtain serviceaccount tokens in unprivileged namespaces could potentially escalate privileges"
+  desc := "SAs and nodes that can retrieve or a issue SA tokens in unprivileged namespaces could potentially obtain tokens with broader permissions over the cluster"
   severity := "Low"
 }
 checkServiceAccounts := true

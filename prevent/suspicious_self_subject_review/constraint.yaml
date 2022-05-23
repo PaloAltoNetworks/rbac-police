@@ -12,6 +12,6 @@ spec:
           - SelfSubjectAccessReview
   parameters:
     # Allow requests from certain users, e.g. "system:serviceaccount:my-priv-ns:my-priv-sa" or "system:node:nodename"
-    allowedUsers: [""] 
+    allowedUsers: [] 
     # Allow requests from users in certain groups, e.g. "system:nodes", "system:serviceaccounts:privileged-ns"
-    allowedGroups: [""] 
+    allowedGroups: [] 
