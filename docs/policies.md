@@ -95,7 +95,7 @@ The above options implemetned by a Rego [wrapper](../lib/utils/wrapper.rego). If
 - Severity: `High`
 - Violation types: `serviceAccounts, nodes`
 ### [obtain_token_weak_ns](../lib/obtain_token_weak_ns.rego)
-- Description: `SAs and nodes that can retrieve or a issue SA tokens in unprivileged namespaces could potentially obtain tokens with broader permissions over the cluster`
+- Description: `SAs and nodes that can retrieve or issue SA tokens in unprivileged namespaces could potentially obtain tokens with broader permissions over the cluster`
 - Severity: `Low`
 - Violation types: `serviceAccounts, nodes`
 ### [pods_ephemeral_ctrs](../lib/pods_ephemeral_ctrs.rego)
