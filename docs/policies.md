@@ -2,7 +2,7 @@
 Policies are Rego scripts that detect identities like serviceAccounts possessing RBAC permissions that match certain rule definitions. Policies  produce violations, which have 3 types:
 - **ServiceAccounts**: Service accounts that violate the policy based on their permissions.
 - **Nodes**: Nodes that violate the policy based on their permissions.
-- **Combined**: Nodes that violate the policy, based on their permisssions and those of the serviceAccounts they host.
+- **Combined**: Nodes that violate the policy, based on their permissions and those of the serviceAccounts they host.
 
 The policy library at [lib](./lib) includes around 20 policies that identify serviceAccounts, pods and nodes that possess risky permissions, each detecting a different attack path.
 
@@ -32,10 +32,10 @@ evaluateRoles(roles, type) {
 - A policy can import a number of built-in utility functions from [builtins.rego](../lib/utils/builtins.rego) via `import data.police_builtins`.
 - The `describe` rule defines the description and severity of the policy.
 - The `checkServiceAccounts`, `checkNodes`, and `checkCombined` variables configure which violations the policy produces.
-- The `evaluateRoles` function receives the `roles` of a serviceAccount or node, and based on them determintes whether it violates the policy.
+- The `evaluateRoles` function receives the `roles` of a serviceAccount or node, and based on them determines whether it violates the policy.
 - Policies can define an `evalute_combined` rule to produce combined violations. See [approve_csrs](../lib/approve_csrs.rego) for an example.
 
-The above options are implemented by a Rego [wrapper](../lib/utils/wrapper.rego). If more control over execution is needed, a policy can be written to run indepentely, without the wrapper. See the [providerIAM](../lib/providerIAM.rego) policy for an example.
+The above options are implemented by a Rego [wrapper](../lib/utils/wrapper.rego). If more control over execution is needed, a policy can be written to run independently, without the wrapper. See the [providerIAM](../lib/providerIAM.rego) policy for an example.
 
 ## Policy Library
 ### [approve_csrs](../lib/approve_csrs.rego)
@@ -83,7 +83,7 @@ The above options are implemented by a Rego [wrapper](../lib/utils/wrapper.rego)
 - Severity: `Low`
 - Violation types: `serviceAccounts, nodes`
 ### [modify_pods](../lib/modify_pods.rego)
-- Description: `SAs and nodes that can update or patch pods in privileged namespaces can gain code execution on pods that are likey to be powerful`
+- Description: `SAs and nodes that can update or patch pods in privileged namespaces can gain code execution on pods that are likely to be powerful`
 - Severity: `High`
 - Violation types: `serviceAccounts, nodes`
 ### [modify_service_status_cve_2020_8554](../lib/modify_service_status_cve_2020_8554.rego)
