@@ -35,7 +35,7 @@ evaluateRoles(roles, type) {
 - The `evaluateRoles` function receives the `roles` of a serviceAccount or node, and based on them determintes whether it violates the policy.
 - Policies can define an `evalute_combined` rule to produce combined violations. See [approve_csrs](../lib/approve_csrs.rego) for an example.
 
-The above options implemetned by a Rego [wrapper](../lib/utils/wrapper.rego). If more control over execution is needed, a policy can be written to run indepentely, without the wrapper. See the [providerIAM](../lib/providerIAM.rego) policy for an example.
+The above options are implemented by a Rego [wrapper](../lib/utils/wrapper.rego). If more control over execution is needed, a policy can be written to run indepentely, without the wrapper. See the [providerIAM](../lib/providerIAM.rego) policy for an example.
 
 ## Policy Library
 ### [approve_csrs](../lib/approve_csrs.rego)
