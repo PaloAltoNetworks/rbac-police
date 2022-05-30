@@ -1,5 +1,6 @@
 package policy
 import data.police_builtins as pb
+import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
   desc := "SAs and nodes that can create, update or patch ValidatingWebhookConfigurations or MutatingWebhookConfigurations can read, and in the case of the latter also mutate, any object admitted to the cluster"
@@ -16,9 +17,9 @@ evaluateRoles(roles, type) {
 } 
 
 validatingwebhookOrMutatingwebhook(resources) {
-  resources[_] == "validatingwebhookconfigurations"
+  "validatingwebhookconfigurations" in resources
 } { 
-  resources[_] == "mutatingwebhookconfigurations"
+  "mutatingwebhookconfigurations" in resources
 } {
   pb.hasWildcard(resources)
 }

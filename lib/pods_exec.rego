@@ -1,5 +1,6 @@
 package policy
 import data.police_builtins as pb
+import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
   desc := sprintf("SAs and nodes with the create pods/exec permission in privileged namespaces (%v) can execute code on pods who are likely to be powerful", [concat(", ", pb.privileged_namespaces)])
@@ -9,9 +10,9 @@ checkServiceAccounts := true
 checkNodes := true
 
 evaluateRoles(roles, type) {
-  role := roles[_]
+  some role in roles
   pb.affectsPrivNS(role)
-  rule := role.rules[_]
+  some rule in role.rules
   pb.subresourceOrWildcard(rule.resources, "pods/exec")
   pb.valueOrWildcard(rule.verbs, "create")
   pb.valueOrWildcard(rule.apiGroups, "")

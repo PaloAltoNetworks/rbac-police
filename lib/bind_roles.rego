@@ -1,5 +1,6 @@
 package policy
 import data.police_builtins as pb
+import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
   desc := sprintf("SAs and nodes that can bind clusterrolebindings or bind rolebindings in privileged namespaces (%v) can grant admin-equivalent permissions to themselves", [concat(", ", pb.privileged_namespaces)])
@@ -9,18 +10,18 @@ checkServiceAccounts := true
 checkNodes := true
 
 evaluateRoles(roles, type) {
-  role := roles[_]
+  some role in roles
   pb.affectsPrivNS(role)
-  rule := role.rules[_]
+  some rule in role.rules
   rolebindingsOrClusterrolebindings(rule.resources)
   pb.valueOrWildcard(rule.verbs, "bind")
   pb.valueOrWildcard(rule.apiGroups, "rbac.authorization.k8s.io")
 } 
 
 rolebindingsOrClusterrolebindings(resources) {
-  resources[_] == "clusterrolebindings"
+  "clusterrolebindings" in resources
 } {
-  resources[_] == "rolebindings" 
+  "rolebindings" in resources
 } {
   pb.hasWildcard(resources)
 }

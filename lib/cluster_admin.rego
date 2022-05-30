@@ -1,5 +1,6 @@
 package policy
 import data.police_builtins as pb
+import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
   desc := "SAs and nodes with cluster admin privileges pose a significant threat to the cluster if compromised"
@@ -9,9 +10,9 @@ checkServiceAccounts := true
 checkNodes := true
 
 evaluateRoles(roles, type) {
-  role := roles[_]
+  some role in roles
   pb.notNamespaced(role)
-  rule := role.rules[_]
+  some rule in role.rules
   pb.hasWildcard(rule.verbs)
   pb.hasWildcard(rule.resources)
   pb.valueOrWildcard(rule.apiGroups, "")

@@ -1,5 +1,6 @@
 package policy
 import data.police_builtins as pb
+import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
   desc := "SAs and nodes that can modify configmaps in the kube-system namespace on EKS clusters can obtain cluster admin privileges by overwriting the aws-auth configmap"
@@ -10,9 +11,9 @@ checkNodes := true
 
 evaluateRoles(roles, type) {
   input.metadata.platform == "eks"
-  role := roles[_]
+  some role in roles
   pb.notNamespacedOrNamespace(role, "kube-system")
-  rule := role.rules[_]
+  some rule in role.rules
   pb.valueOrWildcard(rule.resources, "configmaps")
   pb.updateOrPatchOrWildcard(rule.verbs)
   pb.valueOrWildcard(rule.apiGroups, "")
@@ -22,5 +23,5 @@ evaluateRoles(roles, type) {
 noResourceNamesOrValue(rule, value){
   not pb.hasKey(rule, "resourceNames")
 } {
-  rule.resourceNames[_] == value
+  value in rule.resourceNames
 }

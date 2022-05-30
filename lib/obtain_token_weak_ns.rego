@@ -1,5 +1,6 @@
 package policy
 import data.police_builtins as pb
+import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
   desc := "SAs and nodes that can retrieve or issue SA tokens in unprivileged namespaces could potentially obtain tokens with broader permissions over the cluster"
@@ -9,9 +10,9 @@ checkServiceAccounts := true
 checkNodes := true
 
 evaluateRoles(roles, type) {
-  role := roles[_]
+  some role in roles
   not pb.affectsPrivNS(role)  # don't overlap with policy for token retrieval in privileged namespaces
-  rule := role.rules[_]
+  some rule in role.rules
   ruleCanObtainToken(rule)
 } 
 
@@ -36,9 +37,9 @@ ruleCanAcquireToken(rule) {
 # Create - mannualy create a token secret (issue_token_secrets)
 # Update & Patch - modfiy secret (issue_token_secrets), TODO: probably not exploitable if resourceNames is present?
 canAbuseSecretsForToken(verbs) {
-  verbs[_] == "list"
+  "list" in verbs
 } { 
-  verbs[_] == "get"
+  "get" in verbs
 } {
   pb.createUpdatePatchOrWildcard(verbs)
 }

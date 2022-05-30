@@ -1,5 +1,6 @@
 package policy
 import data.police_builtins as pb
+import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
   desc := "SAs and nodes that can update or patch pods or create pods/exec in unprivileged namespaces can execute code on existing pods"
@@ -10,9 +11,9 @@ checkNodes := true
 
 # This runs modify_pods_kubesystem and pods_exec but for weak namespaces
 evaluateRoles(roles, type) {
-  role := roles[_]
+  some role in roles
   not pb.affectsPrivNS(role)
-  rule := role.rules[_]
+  some rule in role.rules
   pb.valueOrWildcard(rule.apiGroups, "")
   not pb.hasKey(rule, "resourceNames")
   ruleCanRCE(rule)

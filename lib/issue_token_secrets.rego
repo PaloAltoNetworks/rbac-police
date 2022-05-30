@@ -1,5 +1,6 @@
 package policy
 import data.police_builtins as pb
+import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
   desc := sprintf("SAs and nodes that can create or modify secrets in privileged namespaces (%v) can issue tokens for admin-equivalent SAs", [concat(", ", pb.privileged_namespaces)])
@@ -9,9 +10,9 @@ checkServiceAccounts := true
 checkNodes := true
 
 evaluateRoles(roles, type) {
-  role := roles[_]
+  some role in roles
   pb.affectsPrivNS(role)
-  rule := role.rules[_]
+  some rule in role.rules
   pb.valueOrWildcard(rule.resources, "secrets")
   pb.createUpdatePatchOrWildcard(rule.verbs)
   pb.valueOrWildcard(rule.apiGroups, "")

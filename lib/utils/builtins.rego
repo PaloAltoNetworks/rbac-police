@@ -1,23 +1,19 @@
 package police_builtins
+import future.keywords.in
 
-privileged_namespaces := ["kube-system"]
+privileged_namespaces := {"kube-system"}
 
 # True if @arr contains @value or a wildcard
 valueOrWildcard(arr, value) {
-  arr[_] == value
+  value in arr
 } {  
   hasWildcard(arr)
 }
 
 # True if @arr includes a wildcard
 hasWildcard(arr) {
-  isWildcard(arr[_])
+  "*" in arr
 }
-
-# True if @value is a wildcard
-isWildcard(value) {
-  value ==  "*"
-} # no such thing as */* in K8s RBAC
 
 # True if @obj has a key @k
 hasKey(obj, k) {
@@ -28,7 +24,7 @@ hasKey(obj, k) {
 affectsPrivNS(role) {
   notNamespaced(role)
 } {
-  privileged_namespaces[_] == role.effectiveNamespace
+  role.effectiveNamespace in privileged_namespaces
 }
 
 # True if @role isn't namespaced, or namespaced to @ns
@@ -50,43 +46,45 @@ saFullName(sa) = fullName {
 
 # True if @arr included @combinedResourceName or a wildcard that will apply to it
 subresourceOrWildcard(arr, combinedResourceName) {
-  arr[_] == combinedResourceName
+  combinedResourceName in arr
 } { 
   subresource := split(combinedResourceName, "/")[1]
-  arr[_] == sprintf("*/%v", [subresource])
+  wildcardSubresource := sprintf("*/%v", [subresource])
+  wildcardSubresource in arr
 } {
   hasWildcard(arr)
 }
 
 # Returns the SAs from @serviceaccounts that are hosted on the @node
 sasOnNode(node) = serviceAccountsOnNode {
-  serviceAccountsOnNode = { sa | sa := input.serviceAccounts[_]; 
+  serviceAccountsOnNode = { sa | 
+    some sa in input.serviceAccounts
     fullname := saFullName(sa)
-    node.serviceAccounts[_] == fullname
+    fullname in node.serviceAccounts
   }
 }
 
 # True if @verbs includes either 'update', 'patch' or a wildcard
 updateOrPatchOrWildcard(verbs) {
-  verbs[_] == "update"
+  "update" in verbs
 } {
-  verbs[_] == "patch"
+  "patch" in verbs
 } { 
   hasWildcard(verbs)
 } 
 
 # True if @verbs includes either 'create', 'update', 'patch' or a wildcard
 createUpdatePatchOrWildcard(verbs) {
-  verbs[_] == "create"
+  "create" in verbs
 } {
   updateOrPatchOrWildcard(verbs)
 }
 
 # True if @verbs includes either 'get', 'list', or a wildcard
 getOrListOrWildcard(verbs) {
-  verbs[_] == "list"
+  "list" in verbs
 }{
-  verbs[_] == "get"
+  "get" in verbs
 } {
   hasWildcard(verbs)
 }
@@ -103,25 +101,25 @@ ruleCanControlPodSa(rule){
 
 # True if @resources contains a resource that can control pods or a wildcard
 podControllerResource(resources, apiGroups) {
-  resources[_] == "cronjobs"
+  "cronjobs"in resources
   valueOrWildcard(apiGroups, "batch")
 } {
-  resources[_] == "jobs"
+  "jobs" in resources 
   valueOrWildcard(apiGroups, "batch")
 } {
-  resources[_] == "daemonsets"
+  "daemonsets" in resources
   valueOrWildcard(apiGroups, "apps")
 } {
-  resources[_] == "statefulsets"
+  "statefulsets" in resources
   valueOrWildcard(apiGroups, "apps")
 } {
-  resources[_] == "deployments"
+  "deployments" in resources
   valueOrWildcard(apiGroups, "apps")
 } {
-  resources[_] == "replicasets"
+  "replicasets" in resources
   valueOrWildcard(apiGroups, "apps")
 } {
-  resources[_] == "replicationcontrollers"
+  "replicationcontrollers" in resources
   valueOrWildcard(apiGroups, "")
 } {
   podControllerApiGroup(apiGroups)
@@ -132,19 +130,20 @@ podControllerResource(resources, apiGroups) {
 # True if @apiGroups contains a wildcard,
 # or an API group that includes a resource that can control pods
 podControllerApiGroup(apiGroups) {
-  apiGroups[_] == ""
+  "" in apiGroups
 }{
-  apiGroups[_] == "apps"
+  "apps" in apiGroups
 }{
-  apiGroups[_] == "batch"
+  "batch" in apiGroups
 }{
   hasWildcard(apiGroups)
 }
 
 # Return the roles referenced by @roleRefs
 effectiveRoles(roleRefs) = effectiveRoles {
-  effectiveRoles := { effectiveRole | roleObj := input.roles[_] ;
-    roleRef := roleRefs[_]
+  effectiveRoles := { effectiveRole | 
+    some roleObj in input.roles
+    some roleRef in roleRefs
     roleRef.name == roleObj.name
     equalNamespaceIfExist(roleRef, roleObj)
     effectiveRole := buildRole(roleRef, roleObj)

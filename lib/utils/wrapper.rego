@@ -2,6 +2,7 @@ package wrapper
 
 import data.policy as policy
 import data.police_builtins as pb
+import future.keywords.in
 
 main[{"violations": violation}] {
   violation := {"serviceAccounts": saViolations}
@@ -15,13 +16,14 @@ main[{"violations": violation}] {
 saViolations = violations {
   policy.checkServiceAccounts
   violations := { violation |
-    sa := input.serviceAccounts[_]
+    some sa in input.serviceAccounts
     saEffectiveRoles := pb.effectiveRoles(sa.roles)
     policy.evaluateRoles(saEffectiveRoles, "serviceAccount")
     violation := {
       "name": sa.name,
       "namespace": sa.namespace,
-      "nodes": { shortedNode | node := sa.nodes[_];
+      "nodes": { shortedNode | 
+        some node in sa.nodes
         shortedNode := {node.name: node.pods}
       },
     }
@@ -32,7 +34,7 @@ saViolations = violations {
 nodeViolations = violations {
   policy.checkNodes
   violations := { violation |
-    node := input.nodes[_]
+    some node in input.nodes
     nodeEffectiveRoles := pb.effectiveRoles(node.roles)
     policy.evaluateRoles(nodeEffectiveRoles, "node")
     violation := node.name

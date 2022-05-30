@@ -1,5 +1,6 @@
 package policy
 import data.police_builtins as pb
+import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
   desc := "SAs and nodes that can create and approve certificatesigningrequests can issue arbitrary certificates with cluster admin privileges"
@@ -33,22 +34,24 @@ rolesCanCreateAndRetrieveCsrs(roles, type) {
 
 evaluateCombined = combinedViolations {
   combinedViolations := { combinedViolation |
-    node := input.nodes[_]
+    some node in input.nodes
     sasOnNode := pb.sasOnNode(node)
 
     # Can the node or one of its SAs update CSR approvals?
-    sasCanUpdateCsrApproval := { saFullName | saEntry := sasOnNode[_]; 
-      saEffectiveRoles := pb.effectiveRoles(saEntry.roles)
+    sasCanUpdateCsrApproval := { saFullName | 
+      some sa in sasOnNode
+      saEffectiveRoles := pb.effectiveRoles(sa.roles)
       rolesCanUpdateCsrsApproval(saEffectiveRoles)
-      saFullName := pb.saFullName(saEntry)
+      saFullName := pb.saFullName(sa)
     }
     nodeCanUpdateCsrsApproval(node.roles, sasCanUpdateCsrApproval)
 
     # Can the node or one of its SAs approve signers?
-    sasCanApproveSigners := { saFullName | saEntry := sasOnNode[_]; 
-      saEffectiveRoles := pb.effectiveRoles(saEntry.roles)
+    sasCanApproveSigners := { saFullName | 
+      some sa in sasOnNode 
+      saEffectiveRoles := pb.effectiveRoles(sa.roles)
       rolesCanApproveSigners(saEffectiveRoles)
-      saFullName := pb.saFullName(saEntry)
+      saFullName := pb.saFullName(sa)
     }
     nodeCanApproveSigners(node.roles, sasCanApproveSigners)
     
@@ -75,35 +78,35 @@ nodeCanApproveSigners(nodeRoles, sasCanApproveSigners) {
 }
 
 rolesCanUpdateCsrsApproval(roles) {
-  role := roles[_]
+  some role in roles
   pb.notNamespaced(role)
-  rule := role.rules[_]
+  some rule in role.rules
   pb.valueOrWildcard(rule.apiGroups, "certificates.k8s.io")
   pb.updateOrPatchOrWildcard(rule.verbs) # https://github.com/kubernetes/kubernetes/blob/442a69c3bdf6fe8e525b05887e57d89db1e2f3a5/plugin/pkg/admission/certificates/approval/admission.go#L77
   pb.subresourceOrWildcard(rule.resources, "certificatesigningrequests/approval")
 }
 
 rolesCanApproveSigners(roles) {
-  role := roles[_]
+  some role in roles
   pb.notNamespaced(role)
-  rule := role.rules[_]
+  some rule in role.rules
   pb.valueOrWildcard(rule.apiGroups, "certificates.k8s.io")
   pb.valueOrWildcard(rule.verbs, "approve")
   pb.valueOrWildcard(rule.resources, "signers")
 }
 
 rolesCanCreateCsrs(roles) {
-  role := roles[_]
+  some role in roles
   pb.notNamespaced(role)
-  rule := role.rules[_]
+  some rule in role.rules
   pb.valueOrWildcard(rule.apiGroups, "certificates.k8s.io")
   pb.valueOrWildcard(rule.verbs, "create")
 }
 
 rolesCanRetrieveCsrs(roles) {
-  role := roles[_]
+  some role in roles
   pb.notNamespaced(role)
-  rule := role.rules[_]
+  some rule in role.rules
   pb.valueOrWildcard(rule.apiGroups, "certificates.k8s.io")
   getListWatchOrWildcard(rule.verbs) 
 }
@@ -111,5 +114,5 @@ rolesCanRetrieveCsrs(roles) {
 getListWatchOrWildcard(verbs) {
   pb.getOrListOrWildcard(verbs)
 } {
-  verbs[_] == "watch"
+  "watch" in verbs
 }

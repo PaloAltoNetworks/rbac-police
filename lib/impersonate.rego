@@ -1,5 +1,6 @@
 package policy
 import data.police_builtins as pb
+import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
   desc := "SAs and nodes that can impersonate users, groups or other serviceaccounts can escalate privileges by abusing the permissions of the impersonated identity"
@@ -23,11 +24,11 @@ impersonationResources(apiGroups, resources) {
 }
 
 usersGroupsSasOrWildcard(resources) {
-  resources[_] == "users"
+  "users" in resources
 } {
-  resources[_] == "groups"
+  "groups" in resources
 } {
-  resources[_] == "serviceaccounts"
+  "serviceaccounts" in resources
 } {
   pb.hasWildcard(resources)
 }

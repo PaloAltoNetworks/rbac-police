@@ -83,7 +83,7 @@ The above options are implemented by a Rego [wrapper](../lib/utils/wrapper.rego)
 - Severity: `Low`
 - Violation types: `serviceAccounts, nodes`
 ### [modify_pods](../lib/modify_pods.rego)
-- Description: `SAs and nodes that can update or patch pods in privileged namespaces can gain code execution on pods that are likely to be powerful`
+- Description: `SAs and nodes that can update or patch pods in privileged namespaces can gain code execution on pods that are likey to be powerful`
 - Severity: `High`
 - Violation types: `serviceAccounts, nodes`
 ### [modify_service_status_cve_2020_8554](../lib/modify_service_status_cve_2020_8554.rego)

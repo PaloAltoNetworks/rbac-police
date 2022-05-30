@@ -1,5 +1,6 @@
 package policy
 import data.police_builtins as pb
+import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
   desc := sprintf("SAs and nodes that can delete or evict pods in privileged namespaces (%v) and also make other nodes unschedulable can steal powerful pods from other nodes onto a compromised one", [concat(", ", pb.privileged_namespaces)])
@@ -16,22 +17,24 @@ evaluateRoles(roles, type) {
 
 evaluateCombined = combinedViolations {
   combinedViolations := { combinedViolation |
-    node := input.nodes[_]
+    some node in input.nodes
     sasOnNode := pb.sasOnNode(node)
 
     # Can the node or one of its SAs remove pods?
-    sasCanRemovePods := { saFullName | saEntry := sasOnNode[_]; 
-      saEffectiveRoles := pb.effectiveRoles(saEntry.roles)
+    sasCanRemovePods := { saFullName |
+      some sa in sasOnNode
+      saEffectiveRoles := pb.effectiveRoles(sa.roles)
       rolesCanRemovePodsInPrivNS(saEffectiveRoles)
-      saFullName := pb.saFullName(saEntry)
+      saFullName := pb.saFullName(sa)
     }
     nodeCanRemovePods(node.roles, sasCanRemovePods)
     
     # Can the node or one of its SAs make other nodes unschedulable?
-    sasCanMakeNodesUnschedulable := { saFullName | saEntry := sasOnNode[_]; 
-      saEffectiveRoles := pb.effectiveRoles(saEntry.roles)
+    sasCanMakeNodesUnschedulable := { saFullName |
+      some sa in sasOnNode
+      saEffectiveRoles := pb.effectiveRoles(sa.roles)
       rolesCanMakeNodesUnschedulable(saEffectiveRoles)
-      saFullName := pb.saFullName(saEntry)
+      saFullName := pb.saFullName(sa)
     }
     nodeCanMakeNodesUnschedulable(node.roles, sasCanMakeNodesUnschedulable)
 
@@ -57,7 +60,7 @@ nodeCanMakeNodesUnschedulable(nodeRoles, sasCanMakeNodesUnschedulable) {
 }
 
 rolesCanRemovePodsInPrivNS(roles) {
-  role := roles[_]
+  some role in roles
   pb.affectsPrivNS(role)
   roleCanRemovePods(role)
 }
@@ -71,7 +74,7 @@ rolesCanMakeNodesUnschedulable(roles) {
 }
 
 roleCanRemovePods(role) {
-  rule = role.rules[_]
+  some rule in role.rules
   pb.valueOrWildcard(rule.apiGroups, "")
   not pb.hasKey(rule, "resourceNames")
   ruleCanRemovePods(rule)
