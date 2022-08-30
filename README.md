@@ -34,7 +34,7 @@ Only consider violations from service accounts that exist on all nodes. Useful f
 ./rbac-police eval lib/ --only-sas-on-all-nodes
 ```
 ### Discover protections
-Improve accuracy by identifying security-related features gates and built-in admission controllers that can protect against certain attacks. Note: some protections are discovered through  impersonation & dry-run write operations that emulate parts of the attack.
+Improve accuracy by identifying security-related features gates and native admission controllers that can protect against certain attacks. Note: some protections are discovered through impersonation & dry-run write operations that emulate parts of the attack.
 ```
 ./rbac-police eval lib/ -w
 ```
