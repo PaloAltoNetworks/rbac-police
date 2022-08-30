@@ -36,6 +36,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&outFile, "out-file", "o", "", "save results to file")
 	rootCmd.PersistentFlags().BoolVarP(&loudMode, "loud", "l", false, "loud mode, print results regardless of -o")
 	rootCmd.PersistentFlags().BoolVarP(&collectConfig.AllServiceAccounts, "all-serviceaccounts", "a", false, "collect data on all serviceAccounts, not only those assigned to a pod")
+	rootCmd.PersistentFlags().BoolVarP(&collectConfig.DiscoverProtections, "discover-protections", "w", false, "discover relevant control plane features gates and admission controller that protect against certain attacks, partly by emulating attacks via impersonation & dry-run write operations")
 	rootCmd.PersistentFlags().BoolVar(&collectConfig.IgnoreControlPlane, "ignore-controlplane", false, "don't collect data on control plane nodes and pods. Identified by either the 'node-role.kubernetes.io/control-plane' or 'node-role.kubernetes.io/master' labels. ServiceAccounts will not be linked to control plane components")
 	rootCmd.PersistentFlags().StringSliceVar(&collectConfig.NodeGroups, "node-groups", []string{"system:nodes"}, "treat nodes as part of these groups")
 	rootCmd.PersistentFlags().StringVar(&collectConfig.NodeUser, "node-user", "", "user assigned to all nodes, default behaviour assumes nodes users are compatible with the NodeAuthorizer")

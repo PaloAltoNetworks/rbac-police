@@ -173,3 +173,10 @@ equalNamespaceIfExist(obj, other) {
   not hasKey(obj, "namespace")
   not hasKey(other, "namespace")
 }
+
+# Check whether LegacyTokenSecretsReducted is disabled
+legacyTokenSecrets := true {
+  metadata := object.get(input, "metadata", {})
+  features := object.get(metadata, "features", [])
+  not "LegacyTokenSecretsReducted" in features
+}

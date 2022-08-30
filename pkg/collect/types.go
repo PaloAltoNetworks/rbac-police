@@ -7,11 +7,12 @@ import (
 
 // Configuration for Collect()
 type CollectConfig struct {
-	AllServiceAccounts bool
-	IgnoreControlPlane bool
-	NodeGroups         []string
-	NodeUser           string
-	Namespace          string
+	AllServiceAccounts  bool
+	IgnoreControlPlane  bool
+	DiscoverProtections bool
+	NodeGroups          []string
+	NodeUser            string
+	Namespace           string
 }
 
 // Outpot of Collect()
@@ -42,9 +43,10 @@ type RbacDb struct {
 }
 
 type ClusterMetadata struct {
-	ClusterName string `json:"cluster"`
-	Platform    string `json:"platform"`
-	Version     string `json:"version"`
+	ClusterName string   `json:"cluster"`
+	Platform    string   `json:"platform"`
+	Version     string   `json:"version"`
+	Features    []string `json:"features"`
 }
 
 // RBAC info of a serviceAccount
