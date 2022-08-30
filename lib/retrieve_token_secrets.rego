@@ -10,6 +10,7 @@ checkServiceAccounts := true
 checkNodes := true
 
 evaluateRoles(roles, type) {
+  pb.legacyTokenSecrets
   some role in roles
   pb.affectsPrivNS(role)
   some rule in role.rules
@@ -18,5 +19,3 @@ evaluateRoles(roles, type) {
   pb.valueOrWildcard(rule.apiGroups, "")
   not pb.hasKey(rule, "resourceNames")
 } 
-
-

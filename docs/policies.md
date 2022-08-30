@@ -74,6 +74,10 @@ The above options are implemented by a Rego [wrapper](../lib/utils/wrapper.rego)
 - Description: `SAs and nodes that can create or modify secrets in privileged namespaces can issue tokens for admin-equivalent SAs`
 - Severity: `Critical`
 - Violation types: `serviceAccounts, nodes`
+### [list_secrets](../lib/list_secrets.rego)
+- Description: `SAs and nodes that can list secrets cluster-wide may access confidential information, and in some cases serviceAccount tokens`
+- Severity: `Low`
+- Violation types: `serviceAccounts, nodes`
 ### [modify_node_status](../lib/modify_node_status.rego)
 - Description: `SAs and nodes that can modify nodes' status can set or remove labels to affect scheduling constraints enforced via nodeAffinity or nodeSelectors`
 - Severity: `Low`
@@ -114,7 +118,7 @@ The above options are implemented by a Rego [wrapper](../lib/utils/wrapper.rego)
 - Description: `SAs and nodes that can update or patch pods or create pods/exec in unprivileged namespaces can execute code on existing pods`
 - Severity: `Medium`
 - Violation types: `serviceAccounts, nodes`
-### [retrieve_secrets](../lib/retrieve_secrets.rego)
+### [retrieve_token_secrets](../lib/retrieve_token_secrets.rego)
 - Description: `SAs and nodes that can retrieve secrets in privileged namespaces can obtain tokens of admin-equivalent SAs`
 - Severity: `Critical`
 - Violation types: `serviceAccounts, nodes`

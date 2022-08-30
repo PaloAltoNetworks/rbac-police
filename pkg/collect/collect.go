@@ -28,6 +28,10 @@ func Collect(collectConfig CollectConfig) *CollectResult {
 		return nil // error printed in BuildClusterDb
 	}
 
+	if collectConfig.DiscoverProtections {
+		discoverRelevantControlPlaneFeatures(clientset, clusterDb, &metadata)
+	}
+
 	return &CollectResult{
 		Metadata:        metadata,
 		ServiceAccounts: rbacDb.ServiceAccounts,
@@ -70,6 +74,7 @@ func getMetadata(clientset *kubernetes.Clientset, kubeConfig clientcmd.ClientCon
 		ClusterName: rawConfig.Contexts[rawConfig.CurrentContext].Cluster,
 		Platform:    getPlatform(versionInfo.GitVersion),
 		Version:     versionInfo.GitVersion,
+		Features:    []string{},
 	}
 }
 

@@ -37,9 +37,14 @@ ruleCanAcquireToken(rule) {
 # Create - mannualy create a token secret (issue_token_secrets)
 # Update & Patch - modfiy secret (issue_token_secrets), TODO: probably not exploitable if resourceNames is present?
 canAbuseSecretsForToken(verbs) {
+  pb.legacyTokenSecrets
+  listOrGet(verbs)
+} {
+  pb.createUpdatePatchOrWildcard(verbs)
+}
+
+listOrGet(verbs) {
   "list" in verbs
 } { 
   "get" in verbs
-} {
-  pb.createUpdatePatchOrWildcard(verbs)
 }
