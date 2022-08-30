@@ -21,13 +21,14 @@ Flags:
       --short                        abbreviate results
 
 Global Flags:
-  -a, --all-serviceaccounts   collect data on all serviceAccounts, not only those assigned to a pod
-      --ignore-controlplane   don't collect data on control plane nodes and pods. Identified by either the 'node-role.kubernetes.io/control-plane' or 'node-role.kubernetes.io/master' labels. ServiceAccounts will not be linked to control plane components
-  -l, --loud                  loud mode, print results regardless of -o
-  -n, --namespace string      scope collection on serviceAccounts to a namespace
-      --node-groups strings   treat nodes as part of these groups (default [system:nodes])
-      --node-user string      user assigned to all nodes, default behaviour assumes nodes users are compatible with the NodeAuthorizer
-  -o, --out-file string       save results to file
+  -a, --all-serviceaccounts    collect data on all serviceAccounts, not only those assigned to a pod
+  -w, --discover-protections   discover features gates and admission controllers that protect against certain attacks, partly by emulating the attacks via impersonation & dry-run write operations
+      --ignore-controlplane    don't collect data on control plane nodes and pods. Identified by either the 'node-role.kubernetes.io/control-plane' or 'node-role.kubernetes.io/master' labels. ServiceAccounts will not be linked to control plane components
+  -l, --loud                   loud mode, print results regardless of -o
+  -n, --namespace string       scope collection on serviceAccounts to a namespace
+      --node-groups strings    treat nodes as part of these groups (default [system:nodes])
+      --node-user string       user assigned to all nodes, default behaviour assumes nodes users are compatible with the NodeAuthorizer
+  -o, --out-file string        save results to file
 ```
 
 ## Output Schema

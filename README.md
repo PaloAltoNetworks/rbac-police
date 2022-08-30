@@ -1,7 +1,7 @@
 # rbac-police <img src="./docs/logo.png" width="50">
 Retrieve the RBAC permissions of serviceAccounts, pods and nodes in a Kubernetes cluster, and evaluate them using policies written in Rego.
 
-The [default policy library](./lib) includes around 20 policies that identify serviceAccounts, pods and nodes that possess risky permissions, each detecting a different attack path. See the Recommendations section [here](https://www.paloaltonetworks.com/resources/whitepapers/kubernetes-privilege-escalation-excessive-permissions-in-popular-platforms) for advice on addressing powerful permissions in Kubernetes clusters.
+The [default policy library](./lib) includes ~20 policies that identify serviceAccounts, pods and nodes that possess risky permissions, each detecting a different attack path. See the Recommendations section [here](https://www.paloaltonetworks.com/resources/whitepapers/kubernetes-privilege-escalation-excessive-permissions-in-popular-platforms) for advice on addressing powerful permissions in Kubernetes clusters.
 
 
 ## Quick Start
@@ -18,10 +18,6 @@ go build
 ```
 
 ## Use Cases
-Evaluate RBAC permissions and identify privilege escalation paths in your cluster.
-```
-./rbac-police eval lib/
-```
 ### Set severity threshold
 Only evaluate policies with a severity equal to or higher than a threshold.
 ```
@@ -36,6 +32,11 @@ Collect and evaluate RBAC permssions in a certain namespace.
 Only consider violations from service accounts that exist on all nodes. Useful for identifying violating DaemonSets.
 ```
 ./rbac-police eval lib/ --only-sas-on-all-nodes
+```
+### Discover protections
+Improve accuracy by identifying security-related features gates and built-in admission controllers that can protect against certain attacks. Note: some protections are discovered through  impersonation & dry-run write operations that emulate parts of the attack.
+```
+./rbac-police eval lib/ -w
 ```
 ###  Ignore control plane
 Ignore control plane pods and nodes in clusters that host the control plane.
@@ -68,31 +69,6 @@ Or:
  - [Eval command](docs/eval.md)
  - [Collect command](docs/collect.md)
  - [Expand command](docs/expand.md)
-
-## Help
-```
-Usage:
-  rbac-police [command]
-
-Available Commands:
-  collect     Collects the RBAC permissions of serviceAccounts, pods and nodes
-  completion  Generate the autocompletion script for the specified shell
-  eval        Evaulates RBAC permissions of serviceAccounts, pods and nodes using Rego policies
-  expand      Presents the RBAC permissions of serviceAccounts, pods and nodes in a human-readable format
-  help        Help about any command
-
-Flags:
-  -a, --all-serviceaccounts   collect data on all serviceAccounts, not only those assigned to a pod
-  -h, --help                  help for rbac-police
-      --ignore-controlplane   don't collect data on control plane nodes and pods. Identified by either the 'node-role.kubernetes.io/control-plane' or 'node-role.kubernetes.io/master' labels. ServiceAccounts will not be linked to control plane components
-  -l, --loud                  loud mode, print results regardless of -o
-  -n, --namespace string      scope collection on serviceAccounts to a namespace
-      --node-groups strings   treat nodes as part of these groups (default [system:nodes])
-      --node-user string      user assigned to all nodes, default behaviour assumes nodes users are compatible with the NodeAuthorizer
-  -o, --out-file string       save results to file
-
-Use "rbac-police [command] --help" for more information about a command.
-```
 
 ## Media Mentions
 Radiohead:
