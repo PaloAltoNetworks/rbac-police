@@ -90,7 +90,8 @@ getOrListOrWildcard(verbs) {
 }
 
 # True if by any mean, @rule is permitted to overwrite the SA of a pod
-ruleCanControlPodSa(rule){
+ruleCanControlPodSa(rule, ruleOwner) {
+  not blockedByNodeRestriction(ruleOwner)
   valueOrWildcard(rule.verbs, "create")
   valueOrWildcard(rule.resources, "pods")
   valueOrWildcard(rule.apiGroups, "")
@@ -175,8 +176,31 @@ equalNamespaceIfExist(obj, other) {
 }
 
 # Check whether LegacyTokenSecretsReducted is disabled
-legacyTokenSecrets := true {
+legacyTokenSecretsReducted := true {
   metadata := object.get(input, "metadata", {})
   features := object.get(metadata, "features", [])
-  not "LegacyTokenSecretsReducted" in features
+  "LegacyTokenSecretsReducted" in features
+}
+
+# Check whether LegacyTokenSecretsReducted is disabled
+NodeRestriction := true {
+  metadata := object.get(input, "metadata", {})
+  features := object.get(metadata, "features", [])
+  "NodeRestriction" in features
+}
+
+NodeRestrictionV117 := true {
+  metadata := object.get(input, "metadata", {})
+  features := object.get(metadata, "features", [])
+  "NodeRestriction1.17" in features
+}
+
+blockedByNodeRestriction(permissionOwner) {
+  NodeRestriction
+  permissionOwner == "node"
+}
+
+blockedByNodeRestrictionV117(permissionOwner) {
+  NodeRestrictionV117
+  permissionOwner == "node"
 }

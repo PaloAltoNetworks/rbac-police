@@ -34,7 +34,7 @@ Only consider violations from service accounts that exist on all nodes. Useful f
 ./rbac-police eval lib/ --only-sas-on-all-nodes
 ```
 ### Discover protections
-Improve accuracy by identifying security-related features gates and native admission controllers that can protect against certain attacks. Note: some protections are discovered through impersonation & dry-run write operations that emulate parts of the attack.
+Improve accuracy by identifying security-related features gates and native admission controllers that can protect against certain attacks. Please note that  [NodeRestriction](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#noderestriction) is identified by impersonating a node and *dry-run creating a pod*, which may be logged by some systems.
 ```
 ./rbac-police eval lib/ -w
 ```

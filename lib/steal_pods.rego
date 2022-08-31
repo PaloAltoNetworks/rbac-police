@@ -10,9 +10,9 @@ checkCombined := true
 checkServiceAccounts := true
 checkNodes := true
 
-evaluateRoles(roles, type) {
-  rolesCanRemovePodsInPrivNS(roles)
-  rolesCanMakeNodesUnschedulable(roles)
+evaluateRoles(roles, owner) {
+  rolesCanRemovePodsInPrivNS(roles, owner)
+  rolesCanMakeNodesUnschedulable(roles, owner)
 }
 
 evaluateCombined = combinedViolations {
@@ -24,7 +24,7 @@ evaluateCombined = combinedViolations {
     sasCanRemovePods := { saFullName |
       some sa in sasOnNode
       saEffectiveRoles := pb.effectiveRoles(sa.roles)
-      rolesCanRemovePodsInPrivNS(saEffectiveRoles)
+      rolesCanRemovePodsInPrivNS(saEffectiveRoles, "serviceAccount")
       saFullName := pb.saFullName(sa)
     }
     nodeCanRemovePods(node.roles, sasCanRemovePods)
@@ -33,7 +33,7 @@ evaluateCombined = combinedViolations {
     sasCanMakeNodesUnschedulable := { saFullName |
       some sa in sasOnNode
       saEffectiveRoles := pb.effectiveRoles(sa.roles)
-      rolesCanMakeNodesUnschedulable(saEffectiveRoles)
+      rolesCanMakeNodesUnschedulable(saEffectiveRoles, "serviceAccount")
       saFullName := pb.saFullName(sa)
     }
     nodeCanMakeNodesUnschedulable(node.roles, sasCanMakeNodesUnschedulable)
@@ -49,23 +49,24 @@ nodeCanRemovePods(nodeRoles, sasCanRemovePods) {
   count(sasCanRemovePods) > 0
 } {
   nodeEffectiveRoles := pb.effectiveRoles(nodeRoles)
-  rolesCanRemovePodsInPrivNS(nodeEffectiveRoles)
+  rolesCanRemovePodsInPrivNS(nodeEffectiveRoles, "node")
 }
 
 nodeCanMakeNodesUnschedulable(nodeRoles, sasCanMakeNodesUnschedulable) {
   count(sasCanMakeNodesUnschedulable) > 0
 } {
   nodeEffectiveRoles := pb.effectiveRoles(nodeRoles)
-  rolesCanMakeNodesUnschedulable(nodeEffectiveRoles)
+  rolesCanMakeNodesUnschedulable(nodeEffectiveRoles, "node")
 }
 
-rolesCanRemovePodsInPrivNS(roles) {
+rolesCanRemovePodsInPrivNS(roles, owner) {
   some role in roles
   pb.affectsPrivNS(role)
-  roleCanRemovePods(role)
+  roleCanRemovePods(role, owner)
 }
 
-rolesCanMakeNodesUnschedulable(roles) {
+rolesCanMakeNodesUnschedulable(roles, owner) {
+  not pb.blockedByNodeRestriction(owner)
   rule := roles[_].rules[_]
   nodeOrNodeStatus(rule.resources)
   pb.updateOrPatchOrWildcard(rule.verbs)
@@ -73,23 +74,45 @@ rolesCanMakeNodesUnschedulable(roles) {
   not pb.hasKey(rule, "resourceNames")
 }
 
-roleCanRemovePods(role) {
+roleCanRemovePods(role, roleOwner) {
   some rule in role.rules
   pb.valueOrWildcard(rule.apiGroups, "")
-  not pb.hasKey(rule, "resourceNames")
-  ruleCanRemovePods(rule)
+  ruleCanRemovePods(rule, roleOwner)
 }
 
-ruleCanRemovePods(rule){
+# Permissions that would allow one to remove a pod
+ruleCanRemovePods(rule, ruleOwner) {
+  # Check perms that allow removal but may be blocked by NodeRestriction
+  not pb.blockedByNodeRestriction(ruleOwner)
+  ruleCanRemovePodsInner(rule)
+} {
+  # Check perms that allow removal but may be blocked by NodeRestriction from v1.17
+  not pb.blockedByNodeRestrictionV117(ruleOwner)
+  pb.subresourceOrWildcard(rule.resources, "pods/status")
+  pb.updateOrPatchOrWildcard(rule.verbs)
+}
+
+# update / patch pods: set a pod's labels to match a pod controller, triggering the removal of a real replica
+# delete pods: simply delete a pod
+# create pods/eviction: evict a pod
+# delete nodes: delete a node to evict all its pods
+# update nodes: taint a node with the NoExecute taint to evict its pods
+ruleCanRemovePodsInner(rule) {
+  pb.valueOrWildcard(rule.resources, "pods")
+  pb.updateOrPatchOrWildcard(rule.verbs)
+} {
+  not pb.hasKey(rule, "resourceNames")
+  ruleCanRemovePodsInner2(rule)
+}
+
+# These are most likely benign with resourceNames
+ruleCanRemovePodsInner2(rule) {
   pb.valueOrWildcard(rule.resources, "pods")
   pb.valueOrWildcard(rule.verbs, "delete")
 } {
   pb.subresourceOrWildcard(rule.resources, "pods/eviction")
   pb.valueOrWildcard(rule.verbs, "create")
 } {
-  podOrPodStatus(rule.resources)
-  pb.updateOrPatchOrWildcard(rule.verbs)
-} {
   pb.valueOrWildcard(rule.resources, "nodes")
   pb.valueOrWildcard(rule.verbs, "delete")
 } {
@@ -97,15 +120,8 @@ ruleCanRemovePods(rule){
   pb.updateOrPatchOrWildcard(rule.verbs)
 }
 
-
 nodeOrNodeStatus(resources) {
   pb.valueOrWildcard(resources, "nodes")
 } {
   pb.subresourceOrWildcard(resources, "nodes/status")
-}
-
-podOrPodStatus(resources) {
-  pb.valueOrWildcard(resources, "pods")
-} {
-  pb.subresourceOrWildcard(resources, "pods/status")
 }

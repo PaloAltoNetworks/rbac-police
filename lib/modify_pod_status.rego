@@ -8,7 +8,8 @@ describe[{"desc": desc, "severity": severity}] {
 checkServiceAccounts := true
 checkNodes := true
 
-evaluateRoles(roles, type) {
+evaluateRoles(roles, owner) {
+  not pb.blockedByNodeRestrictionV117(owner)
   rule := roles[_].rules[_]
   pb.subresourceOrWildcard(rule.resources, "pods/status")
   pb.updateOrPatchOrWildcard(rule.verbs)

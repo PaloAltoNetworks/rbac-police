@@ -9,7 +9,7 @@ describe[{"desc": desc, "severity": severity}] {
 checkServiceAccounts := true
 checkNodes := true
 
-evaluateRoles(roles, type) {
+evaluateRoles(roles, owner) {
   some role in roles
   pb.affectsPrivNS(role)
   some rule in role.rules

@@ -9,7 +9,7 @@ describe[{"desc": desc, "severity": severity}] {
 checkServiceAccounts := true
 checkNodes := true
 
-evaluateRoles(roles, type) {
+evaluateRoles(roles, owner) {
   rule := roles[_].rules[_]
   validatingwebhookOrMutatingwebhook(rule.resources)
   pb.createUpdatePatchOrWildcard(rule.verbs)

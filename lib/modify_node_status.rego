@@ -8,7 +8,8 @@ describe[{"desc": desc, "severity": severity}] {
 checkServiceAccounts := true
 checkNodes := true
 
-evaluateRoles(roles, type) {
+evaluateRoles(roles, owner) {
+  not pb.blockedByNodeRestriction(owner)
   rule := roles[_].rules[_]
   pb.subresourceOrWildcard(rule.resources, "nodes/status")
   pb.updateOrPatchOrWildcard(rule.verbs)

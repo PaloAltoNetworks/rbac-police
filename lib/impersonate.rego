@@ -9,7 +9,7 @@ describe[{"desc": desc, "severity": severity}] {
 checkServiceAccounts := true
 checkNodes := true
 
-evaluateRoles(roles, type) {
+evaluateRoles(roles, owner) {
   rule := roles[_].rules[_]
   pb.valueOrWildcard(rule.verbs, "impersonate")
   impersonationResources(rule.apiGroups, rule.resources)

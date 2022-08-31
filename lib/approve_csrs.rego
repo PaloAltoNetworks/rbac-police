@@ -19,14 +19,14 @@ checkNodes := true
 #   4. Verbs: approve, group: certificates.k8s.io, resource: signers, resourceName: <signerNameDomain>/<signerNamePath> or <signerNameDomain>/*
 # Nodes already have the 1 & 2: https://github.com/kubernetes/kubernetes/blob/e847b849c4d170b872d6020bfc2263d02c05e369/plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go#L150
 
-evaluateRoles(roles, type) {
+evaluateRoles(roles, owner) {
   rolesCanUpdateCsrsApproval(roles)
   rolesCanApproveSigners(roles)
-  rolesCanCreateAndRetrieveCsrs(roles, type)
+  rolesCanCreateAndRetrieveCsrs(roles, owner)
 }
 
-rolesCanCreateAndRetrieveCsrs(roles, type) {
-  type == "node"
+rolesCanCreateAndRetrieveCsrs(roles, owner) {
+  owner == "node"
 } {
   rolesCanRetrieveCsrs(roles)
   rolesCanCreateCsrs(roles)
