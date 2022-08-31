@@ -27,8 +27,18 @@ Global Flags:
     "metadata": {
         "cluster": "cluster name from the current kubectl context",
         "platform": "eks, gke or empty",
-        "version": "cluster Kubernetes version",
-        "features": ["list of relevant", "feature gates", "and admission controllers"]
+        "version": {
+            "major": "1",
+            "minor": "22",
+            "gitVersion": "v1.22.10-gke.600"
+        },
+        "features": [
+            "list of relevant feature gates and admission controllers,",
+            "currently supports:",
+            "LegacyTokenSecretsReducted",
+            "NodeRestriction",
+            "NodeRestriction1.17",
+        ]
     },
     "serviceAccounts": [
         {

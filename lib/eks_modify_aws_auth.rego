@@ -9,7 +9,7 @@ describe[{"desc": desc, "severity": severity}] {
 checkServiceAccounts := true
 checkNodes := true
 
-evaluateRoles(roles, type) {
+evaluateRoles(roles, owner) {
   input.metadata.platform == "eks"
   some role in roles
   pb.notNamespacedOrNamespace(role, "kube-system")

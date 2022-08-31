@@ -9,8 +9,9 @@ describe[{"desc": desc, "severity": severity}] {
 checkServiceAccounts := true
 checkNodes := true
 
-# This runs modify_pods_kubesystem and pods_exec but for weak namespaces
-evaluateRoles(roles, type) {
+# This runs modify_pods and pods_exec but for weak namespaces
+evaluateRoles(roles, owner) {
+  not pb.blockedByNodeRestriction(owner)
   some role in roles
   not pb.affectsPrivNS(role)
   some rule in role.rules

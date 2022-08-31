@@ -29,7 +29,7 @@ func Collect(collectConfig CollectConfig) *CollectResult {
 	}
 
 	if collectConfig.DiscoverProtections {
-		discoverRelevantControlPlaneFeatures(clientset, clusterDb, &metadata)
+		discoverRelevantControlPlaneFeatures(collectConfig, kubeConfig, clusterDb, &metadata)
 	}
 
 	return &CollectResult{
@@ -73,8 +73,12 @@ func getMetadata(clientset *kubernetes.Clientset, kubeConfig clientcmd.ClientCon
 	return ClusterMetadata{
 		ClusterName: rawConfig.Contexts[rawConfig.CurrentContext].Cluster,
 		Platform:    getPlatform(versionInfo.GitVersion),
-		Version:     versionInfo.GitVersion,
-		Features:    []string{},
+		Version: ClusterVersion{
+			Major:      versionInfo.Major,
+			Minor:      versionInfo.Minor,
+			GitVersion: versionInfo.GitVersion,
+		},
+		Features: []string{},
 	}
 }
 

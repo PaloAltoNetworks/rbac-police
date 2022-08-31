@@ -9,11 +9,11 @@ describe[{"desc": desc, "severity": severity}] {
 checkServiceAccounts := true
 checkNodes := true
 
-evaluateRoles(roles, type) {
+evaluateRoles(roles, owner) {
+  not pb.blockedByNodeRestriction(owner)
   some role in roles
   pb.affectsPrivNS(role)
   some rule in role.rules
-
   pb.valueOrWildcard(rule.apiGroups, "")
   pb.valueOrWildcard(rule.resources, "pods")
   pb.updateOrPatchOrWildcard(rule.verbs) 

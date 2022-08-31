@@ -43,10 +43,16 @@ type RbacDb struct {
 }
 
 type ClusterMetadata struct {
-	ClusterName string   `json:"cluster"`
-	Platform    string   `json:"platform"`
-	Version     string   `json:"version"`
-	Features    []string `json:"features"`
+	ClusterName string         `json:"cluster"`
+	Platform    string         `json:"platform"`
+	Version     ClusterVersion `json:"version"`
+	Features    []string       `json:"features"`
+}
+
+type ClusterVersion struct {
+	Major      string `json:"major"`
+	Minor      string `json:"minor"`
+	GitVersion string `json:"gitVersion"`
 }
 
 // RBAC info of a serviceAccount

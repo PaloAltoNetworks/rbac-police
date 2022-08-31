@@ -9,25 +9,26 @@ describe[{"desc": desc, "severity": severity}] {
 checkServiceAccounts := true
 checkNodes := true
 
-evaluateRoles(roles, type) {
+evaluateRoles(roles, owner) {
   some role in roles
   not pb.affectsPrivNS(role)  # don't overlap with policy for token retrieval in privileged namespaces
   some rule in role.rules
-  ruleCanObtainToken(rule)
+  ruleCanObtainToken(rule, owner)
 } 
 
 # This runs the retrieve_secrets, token_request, issue_token_secrets and assign_sa policies, but for unprivileged namespaces
-ruleCanObtainToken(rule) {
-  ruleCanAcquireToken(rule) 
+ruleCanObtainToken(rule, ruleOwner) {
+  ruleCanAcquireToken(rule, ruleOwner) 
   pb.valueOrWildcard(rule.apiGroups, "")
 } {
-  pb.ruleCanControlPodSa(rule) 
+  pb.ruleCanControlPodSa(rule, ruleOwner) 
 }
 
-ruleCanAcquireToken(rule) {
+ruleCanAcquireToken(rule, ruleOwner) {
   pb.valueOrWildcard(rule.resources, "secrets")
   canAbuseSecretsForToken(rule.verbs)
 } {
+  not pb.blockedByNodeRestriction(ruleOwner)
   pb.subresourceOrWildcard(rule.resources, "serviceaccounts/token")
   pb.valueOrWildcard(rule.verbs, "create")
 }
@@ -37,7 +38,7 @@ ruleCanAcquireToken(rule) {
 # Create - mannualy create a token secret (issue_token_secrets)
 # Update & Patch - modfiy secret (issue_token_secrets), TODO: probably not exploitable if resourceNames is present?
 canAbuseSecretsForToken(verbs) {
-  pb.legacyTokenSecrets
+  not pb.legacyTokenSecretsReducted
   listOrGet(verbs)
 } {
   pb.createUpdatePatchOrWildcard(verbs)

@@ -9,8 +9,8 @@ describe[{"desc": desc, "severity": severity}] {
 checkServiceAccounts := true
 checkNodes := true
 
-evaluateRoles(roles, type) {
-  pb.legacyTokenSecrets
+evaluateRoles(roles, owner) {
+  not pb.legacyTokenSecretsReducted
   some role in roles
   pb.affectsPrivNS(role)
   some rule in role.rules

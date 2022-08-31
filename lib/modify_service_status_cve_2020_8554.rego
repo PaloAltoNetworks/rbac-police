@@ -8,7 +8,7 @@ describe[{"desc": desc, "severity": severity}] {
 checkServiceAccounts := true
 checkNodes := true
 
-evaluateRoles(roles, type) {
+evaluateRoles(roles, owner) {
   rule := roles[_].rules[_]
   pb.subresourceOrWildcard(rule.resources, "services/status")
   pb.updateOrPatchOrWildcard(rule.verbs)
