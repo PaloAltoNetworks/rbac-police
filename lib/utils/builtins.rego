@@ -175,31 +175,34 @@ equalNamespaceIfExist(obj, other) {
   not hasKey(other, "namespace")
 }
 
-# Check whether LegacyTokenSecretsReducted is disabled
+# Checks for LegacyTokenSecretsReducted
 legacyTokenSecretsReducted := true {
   metadata := object.get(input, "metadata", {})
   features := object.get(metadata, "features", [])
   "LegacyTokenSecretsReducted" in features
 }
 
-# Check whether LegacyTokenSecretsReducted is disabled
+# Checks for NodeRestriction
 NodeRestriction := true {
   metadata := object.get(input, "metadata", {})
   features := object.get(metadata, "features", [])
   "NodeRestriction" in features
 }
 
+# Checks for NodeRestriction1.17
 NodeRestrictionV117 := true {
   metadata := object.get(input, "metadata", {})
   features := object.get(metadata, "features", [])
   "NodeRestriction1.17" in features
 }
 
+# Permission owner is a node and NodeRestriction is enabled
 blockedByNodeRestriction(permissionOwner) {
   NodeRestriction
   permissionOwner == "node"
 }
 
+# Permission owner is a node and NodeRestriction v1.17 is enabled
 blockedByNodeRestrictionV117(permissionOwner) {
   NodeRestrictionV117
   permissionOwner == "node"

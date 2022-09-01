@@ -62,5 +62,6 @@ func outputResults(output []byte) {
 func collectionOptionsSet() bool {
 	return collectConfig.IgnoreControlPlane || collectConfig.AllServiceAccounts ||
 		collectConfig.Namespace != "" || collectConfig.NodeUser != "" ||
-		(len(collectConfig.NodeGroups) != 1 && collectConfig.NodeGroups[0] != "system:nodes")
+		(len(collectConfig.NodeGroups) != 1 && collectConfig.NodeGroups[0] != "system:nodes") ||
+		collectConfig.DiscoverProtections
 }
