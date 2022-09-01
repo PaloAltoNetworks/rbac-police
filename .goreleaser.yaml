@@ -1,0 +1,30 @@
+project_name: rbac-police
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - id: rbac-police
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -buildmode=pie
+archives:
+  - builds:
+      - rbac-police
+    format: binary
+    name_template: "{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+checksum:
+  name_template: 'checksums.txt'
+  algorithm: sha256
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+changelog:
+ filters:
+    exclude:
+      - typos?
