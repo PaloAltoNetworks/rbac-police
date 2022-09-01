@@ -16,7 +16,7 @@ import (
 // and populate the cluster's metadata with them for policies to consume.
 // NOTE: Uses impersonation and dry-run write operations, which won't affect the cluster, but may be logged / audited on.
 func discoverRelevantControlPlaneFeatures(collectConfig CollectConfig, kubeConfig clientcmd.ClientConfig, clusterDb *ClusterDb, metadata *ClusterMetadata) {
-	if legacyTokenSecretsReducted(clusterDb) {
+	if legacyTokenSecretsReducted(clusterDb, collectConfig.Namespace) {
 		metadata.Features = append(metadata.Features, "LegacyTokenSecretsReducted")
 	}
 	// If NodeAuthorization is used, check for NodeRestriction
@@ -38,13 +38,21 @@ func discoverRelevantControlPlaneFeatures(collectConfig CollectConfig, kubeConfi
 }
 
 // Best effort test for whether serviceAccount tokens are stored as secrets
-func legacyTokenSecretsReducted(clusterDb *ClusterDb) bool {
+func legacyTokenSecretsReducted(clusterDb *ClusterDb, ns string) bool {
+	// If collection is scoped to ns, use it's default serviceAccount for testing,
+	// Otherwise use kube-system:replicaset-controller
+	saName := "default"
+	if ns == "" {
+		ns = "kube-system"
+		saName = "replicaset-controller"
+	}
+
 	for _, serviceAccount := range clusterDb.ServiceAccounts {
-		if serviceAccount.ObjectMeta.Namespace != "kube-system" {
+		if serviceAccount.ObjectMeta.Namespace != ns {
 			continue
 		}
-		// Arbitrarily chose the replicaset-controller for testing
-		if serviceAccount.ObjectMeta.Name != "replicaset-controller" {
+
+		if serviceAccount.ObjectMeta.Name != saName {
 			continue
 		}
 		// Return true if there are no auto-generated secrets for the serviceAccount

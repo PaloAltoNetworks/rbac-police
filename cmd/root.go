@@ -35,6 +35,7 @@ func Execute() {
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&outFile, "out-file", "o", "", "save results to file")
 	rootCmd.PersistentFlags().BoolVarP(&loudMode, "loud", "l", false, "loud mode, print results regardless of -o")
+	// Collect config
 	rootCmd.PersistentFlags().BoolVarP(&collectConfig.AllServiceAccounts, "all-serviceaccounts", "a", false, "collect data on all serviceAccounts, not only those assigned to a pod")
 	rootCmd.PersistentFlags().BoolVarP(&collectConfig.DiscoverProtections, "discover-protections", "w", false, "discover features gates and admission controllers that protect against certain attacks, partly by emulating the attacks via impersonation & dry-run write operations")
 	rootCmd.PersistentFlags().BoolVar(&collectConfig.IgnoreControlPlane, "ignore-controlplane", false, "don't collect data on control plane nodes and pods. Identified by either the 'node-role.kubernetes.io/control-plane' or 'node-role.kubernetes.io/master' labels. ServiceAccounts will not be linked to control plane components")
