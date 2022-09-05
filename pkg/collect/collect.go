@@ -4,36 +4,46 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth" // in order to connect to clusters via auth plugins
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-// Collects RBAC permissions in a k8s cluster
+// Collect retrieves the RBAC settings in a k8s cluster
 func Collect(collectConfig CollectConfig) *CollectResult {
-	// Init Kubernetes client
-	clientset, kubeConfig, err := initKubeClient()
-	if err != nil {
-		return nil // error printed in initKubeClient
+	var metadata *ClusterMetadata
+	var clusterDb *ClusterDb
+	var kubeConfig clientcmd.ClientConfig = nil
+
+	if collectConfig.OfflineDir == "" {
+		// Online mode, init Kubernetes client
+		clientset, kConfigTmp, err := initKubeClient()
+		kubeConfig = kConfigTmp
+		if err != nil {
+			return nil // error printed in initKubeClient
+		}
+		// Build metadata and clusterDb from remote cluster
+		metadata = buildMetadata(clientset, kubeConfig)
+		clusterDb = buildClusterDb(clientset, collectConfig.Namespace, collectConfig.IgnoreControlPlane)
+	} else {
+		// Offline mode, parse clusterDb and metadata from local files
+		clusterDb, metadata = parseLocalCluster(collectConfig)
 	}
-	metadata := getMetadata(clientset, kubeConfig)
-	clusterDb := BuildClusterDb(clientset, collectConfig.Namespace, collectConfig.IgnoreControlPlane)
 	if clusterDb == nil {
-		return nil // error printed in BuildClusterDb
+		return nil // error printed in buildClusterDb or in parseLocalCluster
 	}
 
-	rbacDb := BuildRbacDb(*clusterDb, collectConfig)
+	if collectConfig.DiscoverProtections {
+		discoverRelevantControlPlaneFeatures(collectConfig, kubeConfig, clusterDb, metadata)
+	}
+
+	rbacDb := buildRbacDb(*clusterDb, collectConfig)
 	if rbacDb == nil {
 		return nil // error printed in BuildClusterDb
 	}
 
-	if collectConfig.DiscoverProtections {
-		discoverRelevantControlPlaneFeatures(collectConfig, kubeConfig, clusterDb, &metadata)
-	}
-
 	return &CollectResult{
-		Metadata:        metadata,
+		Metadata:        *metadata,
 		ServiceAccounts: rbacDb.ServiceAccounts,
 		Nodes:           rbacDb.Nodes,
 		Roles:           rbacDb.Roles,
@@ -58,33 +68,36 @@ func initKubeClient() (*kubernetes.Clientset, clientcmd.ClientConfig, error) {
 }
 
 // Get cluster metadata
-func getMetadata(clientset *kubernetes.Clientset, kubeConfig clientcmd.ClientConfig) ClusterMetadata {
-	versionInfo, err := clientset.Discovery().ServerVersion()
-	if err != nil {
-		log.Warnln("getMetadata: failed to get server version with", err)
-		return ClusterMetadata{}
+func buildMetadata(clientset *kubernetes.Clientset, kubeConfig clientcmd.ClientConfig) *ClusterMetadata {
+	metadata := ClusterMetadata{
+		Features: []string{},
 	}
+
 	rawConfig, err := kubeConfig.RawConfig()
 	if err != nil {
 		log.Warnln("getMetadata: failed to get raw kubeconfig", err)
-		return ClusterMetadata{}
+	} else {
+		metadata.ClusterName = rawConfig.Contexts[rawConfig.CurrentContext].Cluster
 	}
 
-	return ClusterMetadata{
-		ClusterName: rawConfig.Contexts[rawConfig.CurrentContext].Cluster,
-		Platform:    getPlatform(versionInfo.GitVersion),
-		Version: ClusterVersion{
+	versionInfo, err := clientset.Discovery().ServerVersion()
+	if err != nil {
+		log.Warnln("getMetadata: failed to get server version with", err)
+	} else {
+		metadata.Version = ClusterVersion{
 			Major:      versionInfo.Major,
 			Minor:      versionInfo.Minor,
 			GitVersion: versionInfo.GitVersion,
-		},
-		Features: []string{},
+		}
+		metadata.Platform = platformFromVersion(versionInfo.GitVersion)
 	}
+
+	return &metadata
 }
 
 // Identifies the underlying platform from a cluster's @version,
 // supports EKS and GKE
-func getPlatform(version string) string {
+func platformFromVersion(version string) string {
 	if strings.Contains(version, "-eks-") {
 		return "eks"
 	}

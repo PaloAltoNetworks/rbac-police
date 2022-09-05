@@ -19,8 +19,8 @@ func discoverRelevantControlPlaneFeatures(collectConfig CollectConfig, kubeConfi
 	if legacyTokenSecretsReducted(clusterDb, collectConfig.Namespace) {
 		metadata.Features = append(metadata.Features, "LegacyTokenSecretsReducted")
 	}
-	// If NodeAuthorization is used, check for NodeRestriction
-	if collectConfig.NodeUser == "" {
+	// If NodeAuthorization is used, and we're not running in offline mode, check for NodeRestriction
+	if collectConfig.NodeUser == "" && collectConfig.OfflineDir == "" {
 		if NodeRestrictionEnabled(kubeConfig, clusterDb, metadata) {
 			metadata.Features = append(metadata.Features, "NodeRestriction")
 			// If the cluster's version >=1.17, populate NodeRestriction1.17
@@ -39,7 +39,7 @@ func discoverRelevantControlPlaneFeatures(collectConfig CollectConfig, kubeConfi
 
 // Best effort test for whether serviceAccount tokens are stored as secrets
 func legacyTokenSecretsReducted(clusterDb *ClusterDb, ns string) bool {
-	// If collection is scoped to ns, use it's default serviceAccount for testing,
+	// If collection is scoped to ns, use its default serviceAccount for testing,
 	// Otherwise use kube-system:replicaset-controller
 	saName := "default"
 	if ns == "" {

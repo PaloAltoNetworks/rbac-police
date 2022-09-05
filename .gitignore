@@ -2,3 +2,5 @@ results/
 rbac-police
 lib/ignore
 .DS_Store
+.idea/
+local_*/

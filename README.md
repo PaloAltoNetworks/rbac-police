@@ -17,7 +17,7 @@ go build
 ./rbac-police eval lib/
 ```
 
-## Use Cases
+## Usage
 ### Set severity threshold
 Only evaluate policies with a severity equal to or higher than a threshold.
 ```
@@ -34,7 +34,7 @@ Only consider violations from service accounts that exist on all nodes. Useful f
 ./rbac-police eval lib/ --only-sas-on-all-nodes
 ```
 ### Discover protections
-Improve accuracy by identifying security-related features gates and native admission controllers that can protect against certain attacks. Please note that  [NodeRestriction](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#noderestriction) is identified by impersonating a node and *dry-run creating a pod*, which may be logged by some systems.
+Improve accuracy by identifying security-related features gates and admission controllers that can protect against certain attacks. Please note that [NodeRestriction](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#noderestriction) is identified by impersonating a node and *dry-run creating a pod*, which may be logged by some systems.
 ```
 ./rbac-police eval lib/ -w
 ```

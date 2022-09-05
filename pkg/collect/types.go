@@ -10,6 +10,7 @@ type CollectConfig struct {
 	AllServiceAccounts  bool
 	IgnoreControlPlane  bool
 	DiscoverProtections bool
+	OfflineDir          string
 	NodeGroups          []string
 	NodeUser            string
 	Namespace           string
