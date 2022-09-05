@@ -11,7 +11,7 @@ The [default policy library](./lib) includes ~20 policies that identify serviceA
     ```shell
     git clone https://github.com/PaloAltoNetworks/rbac-police && cd rbac-police
     ```
-2. Either install `rbac-police` from a [release](https://github.com/PaloAltoNetworks/rbac-police/releases):
+2. Either install `rbac-police` from a release:
 
     ```shell
     OS=linux  # OS=darwin
