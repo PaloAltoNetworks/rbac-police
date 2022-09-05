@@ -10,8 +10,8 @@ import (
 	rbac "k8s.io/api/rbac/v1"
 )
 
-// Builds rbacDb from a ClusterDb according to config
-func BuildRbacDb(cDb ClusterDb, collectConfig CollectConfig) *RbacDb {
+// buildRbacDb populates a RbacDb object from a ClusterDb according to config
+func buildRbacDb(cDb ClusterDb, collectConfig CollectConfig) *RbacDb {
 	var rbacDb RbacDb
 
 	for _, node := range cDb.Nodes {

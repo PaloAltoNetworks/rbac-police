@@ -42,6 +42,7 @@ func init() {
 	rootCmd.PersistentFlags().StringSliceVar(&collectConfig.NodeGroups, "node-groups", []string{"system:nodes"}, "treat nodes as part of these groups")
 	rootCmd.PersistentFlags().StringVar(&collectConfig.NodeUser, "node-user", "", "user assigned to all nodes, default behaviour assumes nodes users are compatible with the NodeAuthorizer")
 	rootCmd.PersistentFlags().StringVarP(&collectConfig.Namespace, "namespace", "n", "", "scope collection on serviceAccounts to a namespace")
+	rootCmd.PersistentFlags().StringVar(&collectConfig.OfflineDir, "local-dir", "", "offline mode, get cluster data from local files, see <rbac-police>/utils/get_cluster_data.sh")
 }
 
 // Prints and / or saves output to file

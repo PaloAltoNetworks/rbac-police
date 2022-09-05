@@ -3,11 +3,16 @@ import os
 from sys import argv
 import regex
 
-POLICY_DIR = "../../lib"
+POLICY_DIR = "lib"
 EXCLUDED_DIRS = ["ignore", "utils"]
 
 # Prints documentation for the policies in POLICY_DIR
 def main():
+    # If needed, chdir to rbac-police's root directory
+    cwd = os.getcwd()
+    if cwd.endswith("utils") and not os.path.isdir(POLICY_DIR):
+        os.chdir("..")
+
     docs = "## Policy Library\n"
     policy_paths = []
 
@@ -36,8 +41,8 @@ policy at @policy_path, in the following markdown format:
 """
 def generate_doc(policy_path):
     policy_name = os.path.basename(policy_path)[:-5] # remove ".rego"
-    policy_path_from_docs_dir = policy_path[3:] # remove "../"
-    doc = f"### [{policy_name}]({policy_path_from_docs_dir})\n"
+    policy_path_from_docs_dir = "../lib/" + policy_name
+    doc = f"### [{policy_name}]({policy_path_from_docs_dir}.rego)\n"
 
     violtaion_types = []
     description, severity = "", ""

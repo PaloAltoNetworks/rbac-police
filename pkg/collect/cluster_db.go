@@ -10,8 +10,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// Builds a ClusterDb object by querying a cluster
-func BuildClusterDb(clientset *kubernetes.Clientset, ns string, IgnoreControlPlane bool) *ClusterDb {
+// buildClusterDb populates a ClusterDb object by querying a cluster
+func buildClusterDb(clientset *kubernetes.Clientset, ns string, ignoreControlPlane bool) *ClusterDb {
 	var (
 		clusterDb ClusterDb
 		err       error
@@ -28,7 +28,7 @@ func BuildClusterDb(clientset *kubernetes.Clientset, ns string, IgnoreControlPla
 	if err != nil {
 		return nil // error printed in getServiceAccounts
 	}
-	clusterDb.Nodes, err = getNodes(clientset, IgnoreControlPlane)
+	clusterDb.Nodes, err = getNodes(clientset, ignoreControlPlane)
 	if err != nil {
 		return nil // error printed in getPods
 	}
@@ -36,8 +36,8 @@ func BuildClusterDb(clientset *kubernetes.Clientset, ns string, IgnoreControlPla
 	if err != nil {
 		return nil // error printed in getPods
 	}
-	if IgnoreControlPlane {
-		removePodsOnNonRelevantNodes(&clusterDb)
+	if ignoreControlPlane {
+		removePodsFromExcludedNodes(&clusterDb) // remove control plane pods if needed
 	}
 	return &clusterDb
 }
@@ -107,21 +107,21 @@ func getRoleBindingsAndClusterRoleBindings(clientset *kubernetes.Clientset) ([]r
 }
 
 // Removes pods that have a NodeName which is not in cDb.Nodes
-func removePodsOnNonRelevantNodes(cDb *ClusterDb) {
-	var relevantPods []v1.Pod
+func removePodsFromExcludedNodes(cDb *ClusterDb) {
+	var includedPods []v1.Pod
 
 	for _, pod := range cDb.Pods {
 		if pod.Spec.NodeName == "" {
-			relevantPods = append(relevantPods, pod) // include non-scheduled pods
+			includedPods = append(includedPods, pod) // include non-scheduled pods
 			continue
 		}
 		for _, node := range cDb.Nodes {
 			if pod.Spec.NodeName == node.Name {
-				// Pod hosted on relevant node
-				relevantPods = append(relevantPods, pod)
+				// Pod hosted on included node
+				includedPods = append(includedPods, pod)
 				break
 			}
 		}
 	}
-	cDb.Pods = relevantPods
+	cDb.Pods = includedPods
 }
