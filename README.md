@@ -5,17 +5,31 @@ The [default policy library](./lib) includes ~20 policies that identify serviceA
 
 
 ## Quick Start
-Requires [Golang](https://go.dev/doc/install)>=1.16.
 
-1. Build `rbac-police`
-```shell
-go build
-```
-2. Connect `kubectl` to a Kubernetes cluster.
-3. Evaluate RBAC permissions and identify privilege escalation paths in your cluster using the default policy library.
-```shell
-./rbac-police eval lib/
-```
+1. Clone the repository:
+
+    ```shell
+    git clone https://github.com/PaloAltoNetworks/rbac-police && cd rbac-police
+    ```
+2. Either install `rbac-police` from a [release](https://github.com/PaloAltoNetworks/rbac-police/releases):
+
+    ```shell
+    OS=linux  # OS=darwin
+    ARCH=amd64  # ARCH=arm64
+    LATEST_TAG=$(curl -s https://api.github.com/repos/PaloAltoNetworks/rbac-police/releases/latest | jq -r '.tag_name')
+    curl -L -o rbac-police "https://github.com/PaloAltoNetworks/rbac-police/releases/download/${LATEST_TAG}/rbac-police_${LATEST_TAG}_${OS}_${ARCH}" && chmod +x rbac-police
+    ```
+    Or build it with [Golang](https://go.dev/doc/install)>=1.16:
+    
+    ```shell
+    go build
+    ```
+3. Connect `kubectl` to a Kubernetes cluster.
+4. Evaluate RBAC permissions and identify privilege escalation paths in your cluster using the default policy library:
+
+    ```shell
+    ./rbac-police eval lib/
+    ```
 
 ## Usage
 ### Set severity threshold
