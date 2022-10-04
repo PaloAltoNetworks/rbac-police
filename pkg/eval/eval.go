@@ -70,7 +70,7 @@ func Eval(policyPath string, collectResult collect.CollectResult, evalConfig Eva
 	}
 
 	// Prepare configuration for policies
-	policyConfig := bytes.NewBufferString(fmt.Sprintf(`{
+	policyConfig := fmt.Sprintf(`{
 		"config": {
 			"evalSaViolations": %t,
 			"evalNodeViolations": %t,
@@ -78,7 +78,7 @@ func Eval(policyPath string, collectResult collect.CollectResult, evalConfig Eva
 			"evalUserViolations": %t,
 			"evalGroupViolations": %t
 		}
-	}`, evalConfig.SaViolations, evalConfig.NodeViolations, evalConfig.CombinedViolations, evalConfig.UserViolations, evalConfig.GroupViolations))
+	}`, evalConfig.SaViolations, evalConfig.NodeViolations, evalConfig.CombinedViolations, evalConfig.UserViolations, evalConfig.GroupViolations)
 
 	// Run policies against input json
 	var policyResults PolicyResults
@@ -113,7 +113,7 @@ func Eval(policyPath string, collectResult collect.CollectResult, evalConfig Eva
 }
 
 // Runs a Rego policy on @rbacJson
-func runPolicy(policyFile string, rbacJson interface{}, policyConfig *bytes.Buffer, evalConfig EvalConfig) (*PolicyResult, error) {
+func runPolicy(policyFile string, rbacJson interface{}, policyConfig string, evalConfig EvalConfig) (*PolicyResult, error) {
 	policyResult := PolicyResult{PolicyFile: policyFile}
 
 	// Get policy description & severity
@@ -172,7 +172,7 @@ func describePolicy(policyFile string) *DescribeRegoResult {
 }
 
 // Evaluate policy on @input, return violations
-func evaluatePolicy(policyFile string, input interface{}, policyConfig *bytes.Buffer, evalConfig EvalConfig) (*Violations, error) {
+func evaluatePolicy(policyFile string, input interface{}, policyConfig string, evalConfig EvalConfig) (*Violations, error) {
 	var (
 		foundViolations = false
 		violations      Violations
@@ -197,7 +197,7 @@ func evaluatePolicy(policyFile string, input interface{}, policyConfig *bytes.Bu
 	}
 
 	// Manually create storage in-memory, write policyConfig into it, and set up a writable transaction for Load()
-	store := inmem.NewFromReader(policyConfig)
+	store := inmem.NewFromReader(bytes.NewBufferString(policyConfig))
 	txn, err := store.NewTransaction(ctx, storage.WriteParams)
 	if err != nil {
 		log.Errorf("evaluatePolicy: error preparing transaction for %v with %v\n", policyFile, err)
