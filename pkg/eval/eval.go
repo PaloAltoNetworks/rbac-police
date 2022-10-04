@@ -36,6 +36,9 @@ func Eval(policyPath string, collectResult collect.CollectResult, evalConfig Eva
 		log.SetLevel(log.DebugLevel)
 	}
 
+	// Remove identities that we're not going to evaluate per the `--violations` flag
+	removedUnneededIdentities(&collectResult, evalConfig)
+
 	// Enforce evalConfig.OnlySasOnAllNodes
 	if evalConfig.OnlySasOnAllNodes {
 		filterOnlySasOnAllNodes(&collectResult)
@@ -45,6 +48,9 @@ func Eval(policyPath string, collectResult collect.CollectResult, evalConfig Eva
 	if len(evalConfig.IgnoredNamespaces) > 0 {
 		ignoreNamespaces(&collectResult, evalConfig.IgnoredNamespaces)
 	}
+
+	// Since the above functions might have removed some identities, we could have dangling roles that are no longer referenced
+	purgeDanglingRoles(&collectResult)
 
 	// Decode input json
 	var rbacJson interface{}
@@ -82,14 +88,14 @@ func Eval(policyPath string, collectResult collect.CollectResult, evalConfig Eva
 
 	// Run policies against input json
 	var policyResults PolicyResults
-	failedPolicies, errors, belowThresholdPolicies := 0, 0, 0
+	failedPolicies, errorsCounter, belowThresholdPolicies := 0, 0, 0
 	for _, policyFile := range policyFiles {
 		log.Debugf("eval: running policy %v...\n", policyFile)
 		currPolicyResult, err := runPolicy(policyFile, rbacJson, policyConfig, evalConfig)
 		if err != nil {
 			switch err.(type) {
 			default:
-				errors += 1
+				errorsCounter += 1
 			case *belowThresholdErr:
 				belowThresholdPolicies += 1 // unused
 			}
@@ -105,8 +111,8 @@ func Eval(policyPath string, collectResult collect.CollectResult, evalConfig Eva
 	policyResults.Summary = Summary{
 		Evaluated: len(policyFiles),
 		Failed:    failedPolicies,
-		Passed:    len(policyFiles) - failedPolicies - errors,
-		Errors:    errors,
+		Passed:    len(policyFiles) - failedPolicies - errorsCounter,
+		Errors:    errorsCounter,
 	}
 
 	return &policyResults
@@ -138,7 +144,7 @@ func runPolicy(policyFile string, rbacJson interface{}, policyConfig string, eva
 	return &policyResult, nil
 }
 
-// Get policy's description and severiy
+// Get policy's description and severity
 func describePolicy(policyFile string) *DescribeRegoResult {
 	// Prepare query
 	var desc DescribeRegoResult
@@ -283,6 +289,24 @@ func evaluatePolicy(policyFile string, input interface{}, policyConfig string, e
 	return &violations, nil
 }
 
+// Remove identities that aren't going to be evaluated based on evalConfig
+func removedUnneededIdentities(collectResult *collect.CollectResult, evalConfig EvalConfig) {
+	if !evalConfig.CombinedViolations {
+		if !evalConfig.SaViolations {
+			collectResult.ServiceAccounts = []collect.ServiceAccountEntry{}
+		}
+		if !evalConfig.NodeViolations {
+			collectResult.Nodes = []collect.NodeEntry{}
+		}
+	}
+	if !evalConfig.UserViolations {
+		collectResult.Users = []collect.NamedEntry{}
+	}
+	if !evalConfig.GroupViolations {
+		collectResult.Users = []collect.NamedEntry{}
+	}
+}
+
 // Filter out serviceAccounts that aren't on all nodes
 // from @collectResult
 func filterOnlySasOnAllNodes(collectResult *collect.CollectResult) {
@@ -343,6 +367,53 @@ func ignoreNamespaces(collectResult *collect.CollectResult, ignoredNamespaces []
 		}
 		nodeEntry.ServiceAccounts = relevantSasOnNode
 	}
+}
+
+// Based on filters applied to collectResult, the identities that originally referenced certain roles
+// may have been removed. Purge unreferenced roles to improve policy perf.
+func purgeDanglingRoles(collectResult *collect.CollectResult) {
+	var referencedRoles []collect.RoleEntry
+	for _, role := range collectResult.Roles {
+		if roleReferencedByAnIdentity(role, collectResult) {
+			referencedRoles = append(referencedRoles, role)
+		}
+	}
+	if len(referencedRoles) < len(collectResult.Roles) {
+		collectResult.Roles = referencedRoles
+	}
+}
+
+// Returns whether an identity in @collectResult references the @checkedRole
+func roleReferencedByAnIdentity(checkedRole collect.RoleEntry, collectResult *collect.CollectResult) bool {
+	for _, sa := range collectResult.ServiceAccounts {
+		for _, roleRef := range sa.Roles {
+			if checkedRole.Name == roleRef.Name && checkedRole.Namespace == roleRef.Namespace {
+				return true
+			}
+		}
+	}
+	for _, node := range collectResult.Nodes {
+		for _, roleRef := range node.Roles {
+			if checkedRole.Name == roleRef.Name && checkedRole.Namespace == roleRef.Namespace {
+				return true
+			}
+		}
+	}
+	for _, user := range collectResult.Users {
+		for _, roleRef := range user.Roles {
+			if checkedRole.Name == roleRef.Name && checkedRole.Namespace == roleRef.Namespace {
+				return true
+			}
+		}
+	}
+	for _, grp := range collectResult.Groups {
+		for _, roleRef := range grp.Roles {
+			if checkedRole.Name == roleRef.Name && checkedRole.Namespace == roleRef.Namespace {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // Returns a shortened version of @policyResults
