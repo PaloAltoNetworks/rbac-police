@@ -23,7 +23,7 @@ func runCollect(cmd *cobra.Command, args []string) {
 	if collectResult == nil {
 		return // error printed by Collect()
 	}
-	output, err := json.MarshalIndent(collectResult, "", "    ")
+	output, err := json.Marshal(collectResult)
 	if err != nil {
 		log.Errorln("runCollect: failed to marshal results with", err)
 		return
