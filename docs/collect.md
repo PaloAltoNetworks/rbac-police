@@ -1,5 +1,5 @@
 # rbac-police collect
-Collects the RBAC permissions of serviceAccounts, pods and nodes. For clusters hosted on EKS and GKE, the `collect` command also identifies serviceaccount annotations that assign cloud provider IAM entities to Kubernetes serviceaccounts.
+Collects the RBAC permissions of Kubernetes identities. For clusters hosted on EKS and GKE, the `collect` command also identifies service account annotations that assign cloud provider IAM entities to Kubernetes service accounts.
 
 ## Help
 ```
@@ -89,6 +89,30 @@ Global Flags:
                 "kube-system:kube-dns",
             ]
         },
+    ],
+    "users": [
+        {
+            "name": "user-name",
+            "roles": [
+                {
+                    "name": "a role / clusterRole assigned to this user",
+                    "namespace": "role's namespace", // omitempty
+                    "effectiveNamespace": "if granted by a roleBinding, namespace where permissions are in effect" // omitempty
+                }
+            ]
+        }
+    ],
+    "groups": [
+        {
+            "name": "group-name",
+            "roles": [
+                {
+                    "name": "a role / clusterRole assigned to this group",
+                    "namespace": "role's namespace", // omitempty
+                    "effectiveNamespace": "if granted by a roleBinding, namespace where permissions are in effect" // omitempty
+                }
+            ]
+        }
     ],
     "roles": [
         {

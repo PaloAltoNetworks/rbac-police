@@ -5,6 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/open-policy-agent/opa/storage"
+	"github.com/open-policy-agent/opa/storage/inmem"
 	"strings"
 
 	"github.com/PaloAltoNetworks/rbac-police/pkg/collect"
@@ -66,12 +69,23 @@ func Eval(policyPath string, collectResult collect.CollectResult, evalConfig Eva
 		return nil
 	}
 
+	// Prepare configuration for policies
+	policyConfig := bytes.NewBufferString(fmt.Sprintf(`{
+		"config": {
+			"evalSaViolations": %t,
+			"evalNodeViolations": %t,
+			"evalCombinedViolations": %t,
+			"evalUserViolations": %t,
+			"evalGroupViolations": %t
+		}
+	}`, evalConfig.SaViolations, evalConfig.NodeViolations, evalConfig.CombinedViolations, evalConfig.UserViolations, evalConfig.GroupViolations))
+
 	// Run policies against input json
 	var policyResults PolicyResults
 	failedPolicies, errors, belowThresholdPolicies := 0, 0, 0
 	for _, policyFile := range policyFiles {
 		log.Debugf("eval: running policy %v...\n", policyFile)
-		currPolicyResult, err := runPolicy(policyFile, rbacJson, evalConfig)
+		currPolicyResult, err := runPolicy(policyFile, rbacJson, policyConfig, evalConfig)
 		if err != nil {
 			switch err.(type) {
 			default:
@@ -99,7 +113,7 @@ func Eval(policyPath string, collectResult collect.CollectResult, evalConfig Eva
 }
 
 // Runs a Rego policy on @rbacJson
-func runPolicy(policyFile string, rbacJson interface{}, evalConfig EvalConfig) (*PolicyResult, error) {
+func runPolicy(policyFile string, rbacJson interface{}, policyConfig *bytes.Buffer, evalConfig EvalConfig) (*PolicyResult, error) {
 	policyResult := PolicyResult{PolicyFile: policyFile}
 
 	// Get policy description & severity
@@ -115,7 +129,7 @@ func runPolicy(policyFile string, rbacJson interface{}, evalConfig EvalConfig) (
 	}
 
 	// Evaluate policy
-	violations, err := evaluatePolicy(policyFile, rbacJson, evalConfig)
+	violations, err := evaluatePolicy(policyFile, rbacJson, policyConfig, evalConfig)
 	if violations == nil || err != nil {
 		return nil, err
 	}
@@ -158,12 +172,13 @@ func describePolicy(policyFile string) *DescribeRegoResult {
 }
 
 // Evaluate policy on @input, return violations
-func evaluatePolicy(policyFile string, input interface{}, evalConfig EvalConfig) (*Violations, error) {
+func evaluatePolicy(policyFile string, input interface{}, policyConfig *bytes.Buffer, evalConfig EvalConfig) (*Violations, error) {
 	var (
 		foundViolations = false
 		violations      Violations
 		queryStr        string
 		regoFiles       = []string{policyFile, builtinsLibPath}
+		ctx             = context.Background()
 	)
 
 	// Read policy file
@@ -181,21 +196,31 @@ func evaluatePolicy(policyFile string, input interface{}, evalConfig EvalConfig)
 		queryStr = "data.policy.main[_]"
 	}
 
+	// Manually create storage in-memory, write policyConfig into it, and set up a writable transaction for Load()
+	store := inmem.NewFromReader(policyConfig)
+	txn, err := store.NewTransaction(ctx, storage.WriteParams)
+	if err != nil {
+		log.Errorf("evaluatePolicy: error preparing transaction for %v with %v\n", policyFile, err)
+		return nil, err
+	}
+
 	// Prepare query
 	var policyStdoutBuf bytes.Buffer // collect debug output
 	query, err := rego.New(
 		rego.Query(queryStr),
+		rego.Store(store),
+		rego.Transaction(txn),
 		rego.Load(regoFiles, nil),
 		rego.EnablePrintStatements(true),
 		rego.PrintHook(topdown.NewPrintHook(&policyStdoutBuf)),
-	).PrepareForEval(context.Background())
+	).PrepareForEval(ctx)
 	if err != nil {
 		log.Errorf("evaluatePolicy: error preparing query for %v with %v\n", policyFile, err)
 		return nil, err
 	}
 
 	// Evaluate policy over input
-	rs, err := query.Eval(context.Background(), rego.EvalInput(input))
+	rs, err := query.Eval(ctx, rego.EvalInput(input))
 	if policyStdoutBuf.Len() > 0 {
 		log.Debugln("evaluatePolicy: output from", policyFile)
 		log.Debugf(policyStdoutBuf.String())
@@ -217,6 +242,7 @@ func evaluatePolicy(policyFile string, input interface{}, evalConfig EvalConfig)
 			tmpInterface   interface{}
 			currViolations EvalRegoResult
 		)
+		// Our query contains one expression, main[_], so we only assess the first (and only) expression in the result
 		tmpInterface, ok := result.Expressions[0].Value.(map[string]interface{})["violations"]
 		if !ok {
 			log.Errorln("evaluatePolicy: failed to get violation from", policyFile)
@@ -230,16 +256,24 @@ func evaluatePolicy(policyFile string, input interface{}, evalConfig EvalConfig)
 		// Default policies only return 1 violation type per result,
 		// and only 1 result for each violation type, but in case
 		// custom ones don't follow this behaviour, we append instead of assign
-		if currViolations.ServiceAccounts != nil && !evalConfig.NoSaViolations {
+		if currViolations.ServiceAccounts != nil && evalConfig.SaViolations {
 			violations.ServiceAccounts = append(violations.ServiceAccounts, currViolations.ServiceAccounts...)
 			foundViolations = true
 		}
-		if currViolations.Nodes != nil && !evalConfig.NoNodeViolations {
+		if currViolations.Nodes != nil && evalConfig.NodeViolations {
 			violations.Nodes = append(violations.Nodes, currViolations.Nodes...)
 			foundViolations = true
 		}
-		if currViolations.Combined != nil && !evalConfig.NoCombinedViolations {
+		if currViolations.Combined != nil && evalConfig.CombinedViolations {
 			violations.Combined = append(violations.Combined, currViolations.Combined...)
+			foundViolations = true
+		}
+		if currViolations.Users != nil && evalConfig.UserViolations {
+			violations.Users = append(violations.Users, currViolations.Users...)
+			foundViolations = true
+		}
+		if currViolations.Groups != nil && evalConfig.GroupViolations {
+			violations.Groups = append(violations.Groups, currViolations.Groups...)
 			foundViolations = true
 		}
 	}
@@ -324,6 +358,10 @@ func AbbreviateResults(policyResults *PolicyResults) AbbreviatedPolicyResults {
 		}
 		currAbbreviatedPolicyResult.Violations.Nodes = policyResult.Violations.Nodes
 		currAbbreviatedPolicyResult.Violations.Combined = policyResult.Violations.Combined
+		currAbbreviatedPolicyResult.Violations.Users = policyResult.Violations.Users
+		currAbbreviatedPolicyResult.Violations.Groups = policyResult.Violations.Groups
+
+		// Shorten service account violations
 		for _, saViolation := range policyResult.Violations.ServiceAccounts {
 			saFullName := utils.FullName(saViolation.Namespace, saViolation.Name)
 			currAbbreviatedPolicyResult.Violations.ServiceAccounts = append(currAbbreviatedPolicyResult.Violations.ServiceAccounts, saFullName)

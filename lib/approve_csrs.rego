@@ -3,12 +3,10 @@ import data.police_builtins as pb
 import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
-  desc := "SAs and nodes that can create and approve certificatesigningrequests can issue arbitrary certificates with cluster admin privileges"
+  desc := "Identities that can create and approve certificatesigningrequests can issue arbitrary certificates with cluster admin privileges"
   severity := "Critical" 
 }
-checkCombined := true
-checkServiceAccounts := true
-checkNodes := true
+targets := {"serviceAccounts", "nodes", "combined", "users", "groups"}
 
 # https://kubernetes.io/docs/reference/access-authn-authz/certificate-signing-requests/
 # To create a CSR 

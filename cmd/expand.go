@@ -15,8 +15,10 @@ import (
 var (
 	expandCmd = &cobra.Command{
 		Use:   "expand [rbac-json]",
-		Short: "Presents the RBAC permissions of serviceAccounts, pods and nodes in a human-readable format",
-		Run:   runExpand,
+		Short: "Presents the RBAC permissions of Kubernetes identities in a (more) human-readable format",
+		Long: `Presents the RBAC permissions of Kubernetes identities in a (more) human-readable format for manual drill down.
+This is done by repeating the entire permissions of each role under each identity that has it.`,
+		Run: runExpand,
 	}
 )
 

@@ -44,16 +44,21 @@ def generate_doc(policy_path):
     policy_path_from_docs_dir = "../lib/" + policy_name
     doc = f"### [{policy_name}]({policy_path_from_docs_dir}.rego)\n"
 
-    violtaion_types = []
+    violation_types = []
     description, severity = "", ""
     with open(policy_path, "r")  as policy_file:
         for line in policy_file.readlines():
-            if defined_in_rego_line_as_true(line, "checkServiceAccounts"):
-                violtaion_types.append("serviceAccounts")
-            elif defined_in_rego_line_as_true(line, "checkNodes"):
-                violtaion_types.append("nodes")
-            elif defined_in_rego_line_as_true(line, "checkCombined"):
-                violtaion_types.append("combined")
+            if "targets" in line:
+                if defined_in_rego_set(line, "targets", "serviceAccounts"):
+                    violation_types.append("serviceAccounts")
+                if defined_in_rego_set(line, "targets", "nodes"):
+                    violation_types.append("nodes")
+                if defined_in_rego_set(line, "targets", "combined"):
+                    violation_types.append("combined")
+                if defined_in_rego_set(line, "targets", "users"):
+                    violation_types.append("users")
+                if defined_in_rego_set(line, "targets", "groups"):
+                    violation_types.append("groups")
             elif defined_in_rego_line(line, "desc"):
                 if "concat(\", \"" in line:
                     description = "".join(line.split("\"")[1:-3])
@@ -63,22 +68,21 @@ def generate_doc(policy_path):
             elif defined_in_rego_line(line, "severity"):
                 severity = "".join(line.split("\"")[1:-1])
     
-    if len(violtaion_types) == 0 and policy_name == "providerIAM":
-        violtaion_types.append("serviceAccounts")
+    if len(violation_types) == 0 and policy_name == "providerIAM":
+        violation_types.append("serviceAccounts")
 
     doc += f"- Description: `{description}`\n"
     doc += f"- Severity: `{severity}`\n"
-    doc += f"- Violation types: `{', '.join(sorted(violtaion_types, reverse=True))}`\n"
+    doc += f"- Violation types: `{', '.join(violation_types)}`\n"
     return doc
 
 # Returns True if @variable is defined in @line
 def defined_in_rego_line(line, variable):
     return regex.match(f"\s*{variable}\s*:?=", line) != None
- 
-# Returns True if @variable is defined as 'true' in @line
-def defined_in_rego_line_as_true(line, variable):
-    return regex.match(f"\s*{variable}\s*:?=\s*true", line) != None
 
+# Returns True if @element is part of a set named @set_name defined in @line
+def defined_in_rego_set(line, set_name, element):
+     return regex.match(f'\s*{set_name}\s*:?=\s*\{{.*"{element}".*\}}', line) != None
 
 if __name__ == "__main__":
     main()

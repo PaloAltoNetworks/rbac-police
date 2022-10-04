@@ -1,5 +1,5 @@
 # rbac-police expand
-Presents the RBAC permissions of serviceAccounts, pods and nodes in a (more) human-readable format at the expense of storage. Each serviceAccount and node is listed alongside its permissions.
+Presents the RBAC permissions of Kubernetes identities in a (more) human-readable format at the expense of storage. Each identity is listed alongside its permissions.
 
 ## Help
 ```
@@ -28,8 +28,18 @@ Global Flags:
     "metadata": {
         "cluster": "cluster name from the current kubectl context",
         "platform": "eks, gke or empty",
-        "version": "cluster Kubernetes version",
-        "features": ["list of relevant", "feature gates", "and admission controllers"]
+        "version": {
+            "major": "1",
+            "minor": "22",
+            "gitVersion": "v1.22.10-gke.600"
+        },
+        "features": [
+            "list of relevant feature gates and admission controllers,",
+            "currently supports:",
+            "LegacyTokenSecretsReducted",
+            "NodeRestriction",
+            "NodeRestriction1.17",
+        ]
     },
     "serviceAccounts": [
         {
@@ -79,6 +89,30 @@ Global Flags:
                 "kube-system:kube-dns",
             ]
         },
-    ]
+    ],
+    "users": [
+        {
+            "name": "user-name",
+            "roles": [
+                {
+                    "name": "a role / clusterRole assigned to this user",
+                    "effectiveNamespace": "if granted by a roleBinding, namespace where permissions are in effect", // omitempty
+                    "rules": [] // k8s rule format   
+                }
+            ]
+        }
+    ],
+    "groups": [
+        {
+            "name": "group-name",
+            "roles": [
+                {
+                    "name": "a role / clusterRole assigned to this group",
+                    "effectiveNamespace": "if granted by a roleBinding, namespace where permissions are in effect", // omitempty
+                    "rules": [] // k8s rule format   
+                }
+            ]
+        }
+    ],
 }
 ```

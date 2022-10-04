@@ -3,11 +3,10 @@ import data.police_builtins as pb
 import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
-  desc := "SAs and nodes that can impersonate users, groups or other serviceaccounts can escalate privileges by abusing the permissions of the impersonated identity"
+  desc := "Identities that can impersonate users, groups or other serviceaccounts can escalate privileges by abusing the permissions of the impersonated identity"
   severity := "Critical"
 }
-checkServiceAccounts := true
-checkNodes := true
+targets := {"serviceAccounts", "nodes", "users", "groups"}
 
 evaluateRoles(roles, owner) {
   rule := roles[_].rules[_]

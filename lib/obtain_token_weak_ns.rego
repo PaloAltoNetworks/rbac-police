@@ -3,11 +3,10 @@ import data.police_builtins as pb
 import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
-  desc := "SAs and nodes that can retrieve or issue SA tokens in unprivileged namespaces could potentially obtain tokens with broader permissions over the cluster"
+  desc := "Identities that can retrieve or issue SA tokens in unprivileged namespaces could potentially obtain tokens with broader permissions over the cluster"
   severity := "Low"
 }
-checkServiceAccounts := true
-checkNodes := true
+targets := {"serviceAccounts", "nodes", "users", "groups"}
 
 evaluateRoles(roles, owner) {
   some role in roles
@@ -28,7 +27,7 @@ ruleCanAcquireToken(rule, ruleOwner) {
   pb.valueOrWildcard(rule.resources, "secrets")
   canAbuseSecretsForToken(rule.verbs)
 } {
-  not pb.blockedByNodeRestriction(ruleOwner)
+  not pb.nodeRestrictionEnabledAndIsNode(ruleOwner)
   pb.subresourceOrWildcard(rule.resources, "serviceaccounts/token")
   pb.valueOrWildcard(rule.verbs, "create")
 }

@@ -3,11 +3,10 @@ import data.police_builtins as pb
 import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
-  desc := "SAs and nodes that can create, update or patch ValidatingWebhookConfigurations or MutatingWebhookConfigurations can read, and in the case of the latter also mutate, any object admitted to the cluster"
+  desc := "Identities that can create, update or patch ValidatingWebhookConfigurations or MutatingWebhookConfigurations can read, and in the case of the latter also mutate, any object admitted to the cluster"
   severity := "High"
 }
-checkServiceAccounts := true
-checkNodes := true
+targets := {"serviceAccounts", "nodes", "users", "groups"}
 
 evaluateRoles(roles, owner) {
   rule := roles[_].rules[_]

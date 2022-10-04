@@ -2,13 +2,15 @@ package eval
 
 // Configuration for Expand()
 type EvalConfig struct {
-	SeverityThreshold    string
-	OnlySasOnAllNodes    bool
-	IgnoredNamespaces    []string
-	NoSaViolations       bool
-	NoNodeViolations     bool
-	NoCombinedViolations bool
-	DebugMode            bool
+	SeverityThreshold  string
+	OnlySasOnAllNodes  bool
+	IgnoredNamespaces  []string
+	DebugMode          bool
+	SaViolations       bool
+	NodeViolations     bool
+	CombinedViolations bool
+	UserViolations     bool
+	GroupViolations    bool
 }
 
 // Evalaution results for policies
@@ -52,6 +54,8 @@ type Violations struct {
 	ServiceAccounts []ServiceAccountViolation `json:"serviceAccounts,omitempty" mapstructure:"serviceAccounts"`
 	Nodes           []string                  `json:"nodes,omitempty"`
 	Combined        []CombinedViolation       `json:"combined,omitempty"`
+	Users           []string                  `json:"users,omitempty"`
+	Groups          []string                  `json:"groups,omitempty"`
 }
 
 // Policy violations, abbreviated
@@ -59,6 +63,8 @@ type AbbreviatedViolations struct {
 	ServiceAccounts []string            `json:"serviceAccounts,omitempty" mapstructure:"serviceAccounts"`
 	Nodes           []string            `json:"nodes,omitempty"`
 	Combined        []CombinedViolation `json:"combined,omitempty"`
+	Users           []string            `json:"users,omitempty"`
+	Groups          []string            `json:"groups,omitempty"`
 }
 
 // Violation from a serviceAccount
@@ -86,6 +92,8 @@ type EvalRegoResult struct {
 	ServiceAccounts []ServiceAccountViolation `json:"serviceAccounts,omitempty" mapstructure:"serviceAccounts"`
 	Nodes           []string                  `json:"nodes,omitempty"`
 	Combined        []CombinedViolation       `json:"combined,omitempty"`
+	Users           []string                  `json:"users,omitempty"`
+	Groups          []string                  `json:"groups,omitempty"`
 }
 
 // Below severity threshold error

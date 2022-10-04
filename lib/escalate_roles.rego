@@ -3,11 +3,10 @@ import data.police_builtins as pb
 import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
-  desc := sprintf("SAs and nodes that can escalate clusterrole or roles in privileged namespaces (%v) are allowed to escalate privileges", [concat(", ", pb.privileged_namespaces)])
+  desc := sprintf("Identities that can escalate clusterrole or roles in privileged namespaces (%v) are allowed to escalate privileges", [concat(", ", pb.privileged_namespaces)])
   severity := "Critical"
 }
-checkServiceAccounts := true
-checkNodes := true
+targets := {"serviceAccounts", "nodes", "users", "groups"}
 
 evaluateRoles(roles, owner) {
   some role in roles

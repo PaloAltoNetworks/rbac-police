@@ -1,5 +1,5 @@
 # rbac-police eval
-Evaulates the RBAC permissions of serviceAccounts, pods and nodes using policies written in Rego. If a RBAC permission JSON file isn't provided as an argument, `eval` internally calls [`collect`](./collect.md).
+Evaulates the RBAC permissions of Kubernetes identities using policies written in Rego. If a RBAC permission JSON file isn't provided as an argument, `eval` internally calls [`collect`](./collect.md).
 
 See [policies.md](./policies.md) for the list of built-in policies and for instructions on creating new ones. The built-in policy library aim to identify privilege escaltion paths in a cluster.
 
@@ -13,12 +13,10 @@ Flags:
   -d, --debug                        debug mode, prints debug info and stdout of policies
   -h, --help                         help for eval
       --ignored-namespaces strings   ignore serviceAccounts from certain namespaces during eval
-      --no-combined-violations       drop combined violations
-      --no-node-violations           drop node violations
-      --no-sa-violations             drop serviceAccount violations
       --only-sas-on-all-nodes        only evaluate serviceAccounts that exist on all nodes
   -s, --severity-threshold string    only evaluate policies with severity >= threshold (default "Low")
       --short                        abbreviate results
+      --violations strings           violations to search for, beside default supports 'user', 'group' and 'all' (default [sa,node,combined])
 
 Global Flags:
   -a, --all-serviceaccounts    collect data on all serviceAccounts, not only those assigned to a pod
@@ -80,6 +78,16 @@ Global Flags:
                             "default:default"
                         ]
                     },
+                ],
+                "users": [ // omitempty
+                    "users-who-violated-the-policy",
+                    "system:kube-controller-manager",
+                    "john@email.com"
+                ],
+                "groups": [ // omitempty
+                    "groups-who-violated-the-policy",
+                    "system:nodes",
+                    "qa-group"
                 ],
             }
         },

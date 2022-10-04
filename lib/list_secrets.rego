@@ -3,11 +3,10 @@ import data.police_builtins as pb
 import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
-  desc := "SAs and nodes that can list secrets cluster-wide may access confidential information, and in some cases serviceAccount tokens"
-  severity := "Low"
+  desc := "Identities that can list secrets cluster-wide may access confidential information, and in some cases serviceAccount tokens"
+  severity := "Medium"
 }
-checkServiceAccounts := true
-checkNodes := true
+targets := {"serviceAccounts", "nodes", "users", "groups"}
 
 evaluateRoles(roles, owner) {
   some role in roles

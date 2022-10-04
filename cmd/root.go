@@ -19,7 +19,7 @@ var (
 	rootCmd = &cobra.Command{
 		Use:   "rbac-police",
 		Short: "See and evaluate RBAC permissions in Kubernetes clusters",
-		Long:  `Retrieves the RBAC permissions of serviceaccounts, pods and nodes in a Kubernetes cluster, and evaluates them using policies written in Rego.`,
+		Long:  `Retrieves the RBAC permissions of Kubernetes identities and evaluates them using policies written in Rego.`,
 	}
 )
 
