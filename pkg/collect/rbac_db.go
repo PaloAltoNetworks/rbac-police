@@ -1,11 +1,9 @@
 package collect
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/PaloAltoNetworks/rbac-police/pkg/utils"
-	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 )
@@ -23,6 +21,7 @@ func buildRbacDb(cDb ClusterDb, collectConfig CollectConfig) *RbacDb {
 			Name:      sa.Name,
 			Namespace: sa.Namespace,
 		}
+		// Add pods that are assigned the SA
 		for _, pod := range cDb.Pods {
 			if saEntry.Equals(pod.Spec.ServiceAccountName, pod.ObjectMeta.Namespace) {
 				newNodeForSA := true
@@ -44,24 +43,21 @@ func buildRbacDb(cDb ClusterDb, collectConfig CollectConfig) *RbacDb {
 				}
 			}
 		}
+		// Add SA if it's assigned to a pod or if we're configured to always collect
 		if saEntry.Nodes != nil || collectConfig.AllServiceAccounts {
 			saEntry.ProviderIAM = getProviderIAM(sa)
 			rbacDb.ServiceAccounts = append(rbacDb.ServiceAccounts, saEntry)
 		}
 	}
 
-	if err := populateRoleBindingsPermissions(&rbacDb, cDb, collectConfig); err != nil {
-		return nil // error printed in populateRoleBindingsPermissions
-	}
-	if err := populateClusterRoleBindingsPermissions(&rbacDb, cDb, collectConfig); err != nil {
-		return nil // error printed in populateClusterRoleBindingsPermissions
-	}
+	populateRoleBindingsPermissions(&rbacDb, cDb, collectConfig)
+	populateClusterRoleBindingsPermissions(&rbacDb, cDb, collectConfig)
 
 	return &rbacDb
 }
 
 // Incorporates the permission granted by roleBindings into @rbacDb
-func populateRoleBindingsPermissions(rbacDb *RbacDb, cDb ClusterDb, collectConfig CollectConfig) error {
+func populateRoleBindingsPermissions(rbacDb *RbacDb, cDb ClusterDb, collectConfig CollectConfig) {
 	for _, rb := range cDb.RoleBindings {
 		var roleEntry RoleEntry
 		if rb.RoleRef.Kind == "ClusterRole" {
@@ -78,102 +74,158 @@ func populateRoleBindingsPermissions(rbacDb *RbacDb, cDb ClusterDb, collectConfi
 			Namespace:          roleEntry.Namespace,
 			EffectiveNamespace: rb.ObjectMeta.Namespace,
 		}
-		roleIsBindedToRelevantSubject := false
+		roleBindedToRelevantSubject := false
+
 		// Check if rb grants role to a serviceAccount
-		for i := range rbacDb.ServiceAccounts {
-			isSaReferenced, err := isSAReferencedBySubjects(rb.Subjects, utils.FullName(rbacDb.ServiceAccounts[i].Namespace, rbacDb.ServiceAccounts[i].Name), rb.Namespace)
-			if err != nil {
-				return err
-			}
-			if isSaReferenced {
+		for i, sa := range rbacDb.ServiceAccounts {
+			if isSAReferencedBySubjects(rb.Subjects, utils.FullName(sa.Namespace, sa.Name), rb.Namespace) {
 				rbacDb.ServiceAccounts[i].Roles = append(rbacDb.ServiceAccounts[i].Roles, roleRef)
-				roleIsBindedToRelevantSubject = true
+				roleBindedToRelevantSubject = true
 			}
 		}
 		// Check if rb grants role to a node
-		for i := range rbacDb.Nodes {
-			if isNodeReferencedBySubjects(rb.Subjects, rbacDb.Nodes[i].Name, collectConfig.NodeGroups, collectConfig.NodeUser) {
+		for i, node := range rbacDb.Nodes {
+			if isNodeReferencedBySubjects(rb.Subjects, node.Name, collectConfig.NodeGroups, collectConfig.NodeUser) {
 				rbacDb.Nodes[i].Roles = append(rbacDb.Nodes[i].Roles, roleRef)
-				roleIsBindedToRelevantSubject = true
+				roleBindedToRelevantSubject = true
 			}
 		}
+
+		// Check if rb grants role to a user or group
+		for _, subject := range rb.Subjects {
+			if subject.Kind == "User" {
+				userAlreadyInDb := false
+				roleBindedToRelevantSubject = true
+				for i, user := range rbacDb.Users {
+					if subject.Name == user.Name {
+						rbacDb.Users[i].Roles = append(rbacDb.Users[i].Roles, roleRef)
+						userAlreadyInDb = true
+						break // found user, break
+					}
+				}
+				if !userAlreadyInDb { // add user to RbacDb if encountered it for the first time
+					rbacDb.Users = append(rbacDb.Users, NamedEntry{Name: subject.Name, Roles: []RoleRef{roleRef}})
+				}
+			} else if subject.Kind == "Group" {
+				if subject.Name == "system:masters" {
+					continue // ignore system:masters to reduce clutter
+				}
+				grpAlreadyInDb := false
+				roleBindedToRelevantSubject = true
+				for i, grp := range rbacDb.Groups {
+					if subject.Name == grp.Name {
+						rbacDb.Groups[i].Roles = append(rbacDb.Groups[i].Roles, roleRef)
+						grpAlreadyInDb = true
+						break // found group, break
+					}
+				}
+				if !grpAlreadyInDb { // add grp to RbacDb if encountered it for the first time
+					rbacDb.Groups = append(rbacDb.Groups, NamedEntry{Name: subject.Name, Roles: []RoleRef{roleRef}})
+				}
+			}
+
+		}
 		// Add role to rbacDb if it's granted to any SA or node
-		if roleIsBindedToRelevantSubject {
+		if roleBindedToRelevantSubject {
 			addRoleIfDoesntExists(rbacDb, roleEntry)
 		}
 	}
-	return nil
 }
 
 // Incorporates the permission granted by clusterRoleBindings into @rbacDb
-func populateClusterRoleBindingsPermissions(rbacDb *RbacDb, cDb ClusterDb, collectConfig CollectConfig) error {
+func populateClusterRoleBindingsPermissions(rbacDb *RbacDb, cDb ClusterDb, collectConfig CollectConfig) {
 	for _, crb := range cDb.ClusterRoleBindings {
 		clusterRoleEntry := findClusterRole(cDb.ClusterRoles, crb.RoleRef)
 		if clusterRoleEntry.Name == "" {
 			continue // binded clusterRole doesn't exist
 		}
-
 		clusterRoleRef := RoleRef{ // short version of roleEntry for sa & nodes to point to
 			Name: clusterRoleEntry.Name,
 		}
-		roleIsBindedToRelevantSubject := false
+		roleBindedToRelevantSubject := false
+
 		// Check if the crb grants the cr to a serviceAccount
-		for i := range rbacDb.ServiceAccounts {
-			isSaReferenced, err := isSAReferencedBySubjects(crb.Subjects, utils.FullName(rbacDb.ServiceAccounts[i].Namespace, rbacDb.ServiceAccounts[i].Name), "")
-			if err != nil {
-				return err
-			}
-			if isSaReferenced {
+		for i, sa := range rbacDb.ServiceAccounts {
+			if isSAReferencedBySubjects(crb.Subjects, utils.FullName(sa.Namespace, sa.Name), "") {
 				rbacDb.ServiceAccounts[i].Roles = append(rbacDb.ServiceAccounts[i].Roles, clusterRoleRef)
-				roleIsBindedToRelevantSubject = true
+				roleBindedToRelevantSubject = true
 			}
 		}
 		// Check if the crb grants the cr to a node
-		for i := range rbacDb.Nodes {
-			if isNodeReferencedBySubjects(crb.Subjects, rbacDb.Nodes[i].Name, collectConfig.NodeGroups, collectConfig.NodeUser) {
+		for i, node := range rbacDb.Nodes {
+			if isNodeReferencedBySubjects(crb.Subjects, node.Name, collectConfig.NodeGroups, collectConfig.NodeUser) {
 				rbacDb.Nodes[i].Roles = append(rbacDb.Nodes[i].Roles, clusterRoleRef)
-				roleIsBindedToRelevantSubject = true
+				roleBindedToRelevantSubject = true
 			}
 		}
-		// Add cluserRole to rbacDb if it's granted to any SA or node
-		if roleIsBindedToRelevantSubject {
+
+		// Check if crb grants ClusterRole to a user or group
+		for _, subject := range crb.Subjects {
+			if subject.Kind == "User" {
+				userAlreadyInDb := false
+				roleBindedToRelevantSubject = true
+				for i, user := range rbacDb.Users {
+					if subject.Name == user.Name {
+						rbacDb.Users[i].Roles = append(rbacDb.Users[i].Roles, clusterRoleRef)
+						userAlreadyInDb = true
+						break
+					}
+				}
+				if !userAlreadyInDb {
+					rbacDb.Users = append(rbacDb.Users, NamedEntry{Name: subject.Name, Roles: []RoleRef{clusterRoleRef}})
+				}
+			} else if subject.Kind == "Group" {
+				if subject.Name == "system:masters" {
+					continue // ignore system:masters to reduce clutter
+				}
+				grpAlreadyInDb := false
+				roleBindedToRelevantSubject = true
+				for i, grp := range rbacDb.Groups {
+					if subject.Name == grp.Name {
+						rbacDb.Groups[i].Roles = append(rbacDb.Groups[i].Roles, clusterRoleRef)
+						grpAlreadyInDb = true
+						break
+					}
+				}
+				if !grpAlreadyInDb {
+					rbacDb.Groups = append(rbacDb.Groups, NamedEntry{Name: subject.Name, Roles: []RoleRef{clusterRoleRef}})
+				}
+			}
+		}
+
+		// Add clusterRole to rbacDb if it's granted to any SA or node
+		if roleBindedToRelevantSubject {
 			addRoleIfDoesntExists(rbacDb, clusterRoleEntry)
 		}
 	}
-	return nil
 }
 
 // Checks whether the serviceAccount denoted by @fullname is refernced in @subjects
-func isSAReferencedBySubjects(subjects []rbac.Subject, saFullname string, rbNS string) (bool, error) {
+func isSAReferencedBySubjects(subjects []rbac.Subject, saFullname string, rbNS string) bool {
 	for _, subject := range subjects {
 		if subject.Kind == "ServiceAccount" {
 			if subject.Namespace == "" {
-				if rbNS == "" {
-					// panic
-					log.Errorln("isSAReferencedBySubjects: serviceAccount subject must have a namespace as binding doesn't")
-					return false, errors.New("serviceAccount subject must have a namespace as binding doesn't")
-				}
 				subject.Namespace = rbNS
 			}
 			if saFullname == utils.FullName(subject.Namespace, subject.Name) {
-				return true, nil
+				return true
 			}
 		} else if subject.Kind == "Group" {
 			if subject.Name == "system:authenticated" {
-				return true, nil
+				return true
 			}
 			if !strings.HasPrefix(subject.Name, "system:serviceaccounts") {
-				return false, nil // only handle sa groups
+				return false // only handle sa groups
 			}
 			if subject.Name == "system:serviceaccounts" {
-				return true, nil
+				return true
 			}
 			if subject.Name == "system:serviceaccounts:"+strings.Split(saFullname, ":")[0] {
-				return true, nil
+				return true
 			}
 		}
 	}
-	return false, nil
+	return false
 }
 
 // Checks whether the node denoted by @nodeName is refernced in @subjects
@@ -205,8 +257,8 @@ func isNodeReferencedBySubjects(subjects []rbac.Subject, nodeName string, nodeGr
 
 // Adds @role entry to @rbacDb if it's not already there
 func addRoleIfDoesntExists(rbacDb *RbacDb, roleEntry RoleEntry) {
-	for i := range rbacDb.Roles {
-		if roleEntry.Name == rbacDb.Roles[i].Name && roleEntry.Namespace == (*rbacDb).Roles[i].Namespace {
+	for _, role := range rbacDb.Roles {
+		if roleEntry.Name == role.Name && roleEntry.Namespace == role.Namespace {
 			return
 		}
 	}

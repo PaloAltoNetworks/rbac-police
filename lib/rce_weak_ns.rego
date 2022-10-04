@@ -3,15 +3,14 @@ import data.police_builtins as pb
 import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
-  desc := "SAs and nodes that can update or patch pods or create pods/exec in unprivileged namespaces can execute code on existing pods"
+  desc := "Identities that can update or patch pods or create pods/exec in unprivileged namespaces can execute code on existing pods"
   severity := "Medium"
 }
-checkServiceAccounts := true
-checkNodes := true
+targets := {"serviceAccounts", "nodes", "users", "groups"}
 
 # This runs modify_pods and pods_exec but for weak namespaces
 evaluateRoles(roles, owner) {
-  not pb.blockedByNodeRestriction(owner)
+  not pb.nodeRestrictionEnabledAndIsNode(owner)
   some role in roles
   not pb.affectsPrivNS(role)
   some rule in role.rules

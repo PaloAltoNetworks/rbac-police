@@ -91,7 +91,7 @@ getOrListOrWildcard(verbs) {
 
 # True if by any mean, @rule is permitted to overwrite the SA of a pod
 ruleCanControlPodSa(rule, ruleOwner) {
-  not blockedByNodeRestriction(ruleOwner)
+  not nodeRestrictionEnabledAndIsNode(ruleOwner)
   valueOrWildcard(rule.verbs, "create")
   valueOrWildcard(rule.resources, "pods")
   valueOrWildcard(rule.apiGroups, "")
@@ -197,13 +197,13 @@ NodeRestrictionV117 := true {
 }
 
 # Permission owner is a node and NodeRestriction is enabled
-blockedByNodeRestriction(permissionOwner) {
+nodeRestrictionEnabledAndIsNode(permissionOwner) {
   NodeRestriction
   permissionOwner == "node"
 }
 
 # Permission owner is a node and NodeRestriction v1.17 is enabled
-blockedByNodeRestrictionV117(permissionOwner) {
+nodeRestrictionV117EnabledAndIsNode(permissionOwner) {
   NodeRestrictionV117
   permissionOwner == "node"
 }

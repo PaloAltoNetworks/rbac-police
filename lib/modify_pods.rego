@@ -3,14 +3,13 @@ import data.police_builtins as pb
 import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
-  desc := sprintf("SAs and nodes that can update or patch pods in privileged namespaces (%v) can gain code execution on pods that are likely to be powerful", [concat(", ", pb.privileged_namespaces)])
+  desc := sprintf("Identities that can update or patch pods in privileged namespaces (%v) can gain code execution on pods that are likely to be powerful", [concat(", ", pb.privileged_namespaces)])
   severity := "High"
 }
-checkServiceAccounts := true
-checkNodes := true
+targets := {"serviceAccounts", "nodes", "users", "groups"}
 
 evaluateRoles(roles, owner) {
-  not pb.blockedByNodeRestriction(owner)
+  not pb.nodeRestrictionEnabledAndIsNode(owner)
   some role in roles
   pb.affectsPrivNS(role)
   some rule in role.rules

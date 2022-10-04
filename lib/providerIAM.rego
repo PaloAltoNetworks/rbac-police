@@ -1,13 +1,15 @@
 package policy
 import data.police_builtins as pb
+import data.config
 import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
-  desc := "K8s SAs assigned cloud provider IAM roles may be abused to attack the underlying cloud account (depending on the permissions of the IAM role)"
+  desc := "Kubernetes ServiceAccounts assigned cloud provider IAM roles may be abused to attack the underlying cloud account (depending on the permissions of the IAM role)"
   severity := "Low"
 }
 
 main[{"violations": violation}] {
+  config.evalSaViolations
   violation := {"serviceAccounts": saViolations}
 } 
 

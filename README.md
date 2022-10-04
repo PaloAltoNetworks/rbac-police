@@ -1,8 +1,7 @@
 # rbac-police <img src="./docs/logo.png" width="50">
-Retrieve the RBAC permissions of serviceAccounts, pods and nodes in a Kubernetes cluster, and evaluate them using policies written in Rego.
+Retrieve the RBAC permissions of identities (service accounts, pods, nodes, users and groups) in a Kubernetes cluster, and evaluate them using policies written in Rego.
 
-The [default policy library](./lib) includes ~20 policies that identify serviceAccounts, pods and nodes that possess risky permissions, each detecting a different attack path. See the Recommendations section [here](https://www.paloaltonetworks.com/resources/whitepapers/kubernetes-privilege-escalation-excessive-permissions-in-popular-platforms) for advice on addressing powerful permissions in Kubernetes clusters.
-
+The [policy library](./lib) includes ~20 policies that identify identities possessing risky permissions, each detecting a different attack path. See the Recommendations section [here](https://www.paloaltonetworks.com/resources/whitepapers/kubernetes-privilege-escalation-excessive-permissions-in-popular-platforms) for advice on addressing powerful permissions in Kubernetes clusters.
 
 ## Quick Start
 
@@ -27,7 +26,7 @@ The [default policy library](./lib) includes ~20 policies that identify serviceA
 3. Connect `kubectl` to a Kubernetes cluster.
 4. Evaluate RBAC permissions and identify privilege escalation paths in your cluster using the default policy library:
 
-    ```shell
+    ```
     ./rbac-police eval lib/
     ```
 
@@ -38,9 +37,15 @@ Only evaluate policies with a severity equal to or higher than a threshold.
 ./rbac-police eval lib/ -s High
 ```
 ### Scope to a namespace
-Collect and evaluate RBAC permssions in a certain namespace.
+Only look into service accounts and pods from a certain namespace.
 ```
 ./rbac-police eval lib/ -n production
+```
+### Configure violation types
+Configure which identities are evaluated for violations, default are `sa,node,combined`.
+```
+./rbac-police eval lib/ --violations sa,user
+./rbac-police eval lib/ --violations all  # sa,node,combined,user,group
 ```
 ### Only alert on SAs that exist on all nodes
 Only consider violations from service accounts that exist on all nodes. Useful for identifying violating DaemonSets.
@@ -52,7 +57,7 @@ Improve accuracy by identifying security-related features gates and admission co
 ```
 ./rbac-police eval lib/ -w
 ```
-###  Ignore control plane
+### Ignore control plane
 Ignore control plane pods and nodes in clusters that host the control plane.
 ```
 ./rbac-police eval lib/ --ignore-controlplane

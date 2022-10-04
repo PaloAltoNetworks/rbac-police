@@ -3,11 +3,10 @@ import data.police_builtins as pb
 import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
-  desc := sprintf("SAs and nodes that can create or modify secrets in privileged namespaces (%v) can issue tokens for admin-equivalent SAs", [concat(", ", pb.privileged_namespaces)])
+  desc := sprintf("Identities that can create or modify secrets in privileged namespaces (%v) can issue tokens for admin-equivalent SAs", [concat(", ", pb.privileged_namespaces)])
   severity := "Critical"
 }
-checkServiceAccounts := true
-checkNodes := true
+targets := {"serviceAccounts", "nodes", "users", "groups"}
 
 evaluateRoles(roles, owner) {
   some role in roles

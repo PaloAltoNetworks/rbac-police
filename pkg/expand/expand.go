@@ -11,6 +11,7 @@ func Expand(collectResult collect.CollectResult) *ExpandResult {
 		Metadata: collectResult.Metadata,
 	}
 
+	// Add serviceaccounts
 	for _, serviceAccount := range collectResult.ServiceAccounts {
 		expandedSA := ExpandedServiceAccount{
 			Name:        serviceAccount.Name,
@@ -22,6 +23,7 @@ func Expand(collectResult collect.CollectResult) *ExpandResult {
 		expandResult.ServiceAccounts = append(expandResult.ServiceAccounts, expandedSA)
 	}
 
+	// Add nodes
 	for _, node := range collectResult.Nodes {
 		expandedNode := ExpandedNode{
 			Name:            node.Name,
@@ -29,6 +31,24 @@ func Expand(collectResult collect.CollectResult) *ExpandResult {
 		}
 		expandedNode.Roles = expandRoleRefs(node.Roles, collectResult.Roles)
 		expandResult.Nodes = append(expandResult.Nodes, expandedNode)
+	}
+
+	// Add users
+	for _, user := range collectResult.Users {
+		expandedUser := ExpandedNamedEntry{
+			Name:  user.Name,
+			Roles: expandRoleRefs(user.Roles, collectResult.Roles),
+		}
+		expandResult.Users = append(expandResult.Users, expandedUser)
+	}
+
+	// Add groups
+	for _, group := range collectResult.Groups {
+		expandedGroup := ExpandedNamedEntry{
+			Name:  group.Name,
+			Roles: expandRoleRefs(group.Roles, collectResult.Roles),
+		}
+		expandResult.Groups = append(expandResult.Groups, expandedGroup)
 	}
 
 	return &expandResult

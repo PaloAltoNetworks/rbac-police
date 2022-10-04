@@ -11,6 +11,8 @@ type ExpandResult struct {
 	Metadata        collect.ClusterMetadata  `json:"metadata"`
 	ServiceAccounts []ExpandedServiceAccount `json:"serviceAccounts"`
 	Nodes           []ExpandedNode           `json:"nodes"`
+	Users           []ExpandedNamedEntry     `json:"users"`
+	Groups          []ExpandedNamedEntry     `json:"groups"`
 }
 
 // RBAC permissions of a serviceAccount
@@ -27,6 +29,12 @@ type ExpandedNode struct {
 	Name            string         `json:"name"`
 	Roles           []ExpandedRole `json:"roles"`
 	ServiceAccounts []string       `json:"serviceAccounts"`
+}
+
+// RBAC permissions of an identity denoted by name, like a user or a group
+type ExpandedNamedEntry struct {
+	Name  string         `json:"name"`
+	Roles []ExpandedRole `json:"roles"`
 }
 
 // A role granted in @EffectiveNamespace

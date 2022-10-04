@@ -5,7 +5,7 @@ import (
 	rbac "k8s.io/api/rbac/v1"
 )
 
-// Configuration for Collect()
+// CollectConfig holds the options for Collect()
 type CollectConfig struct {
 	AllServiceAccounts  bool
 	IgnoreControlPlane  bool
@@ -16,16 +16,18 @@ type CollectConfig struct {
 	Namespace           string
 }
 
-// Outpot of Collect()
-// Holds the RBAC permissions of SAs, pods and nodes in a cluster
+// CollectResult is the output of Collect()
+// Includes the cluster metadata and the RBAC data (basically ClusterMetadata + RbacDb)
 type CollectResult struct {
 	Metadata        ClusterMetadata       `json:"metadata"`
 	ServiceAccounts []ServiceAccountEntry `json:"serviceAccounts"`
 	Nodes           []NodeEntry           `json:"nodes"`
+	Users           []NamedEntry          `json:"users"`
+	Groups          []NamedEntry          `json:"groups"`
 	Roles           []RoleEntry           `json:"roles"`
 }
 
-// Database of cluster objects relevant to RBAC
+// ClusterDb holds cluster objects relevant to RBAC
 type ClusterDb struct {
 	Pods                []v1.Pod            // TODO: only need name, namespace, serviceaccount, and node, not full object
 	Nodes               []v1.Node           // TODO: only need name, not full object
@@ -36,10 +38,12 @@ type ClusterDb struct {
 	ClusterRoleBindings []rbac.ClusterRoleBinding
 }
 
-// Database of the RBAC permisisons of serviceAccounts, pods and nods in a cluster
+// RbacDb is a database holding the RBAC permissions in the cluster
 type RbacDb struct {
 	ServiceAccounts []ServiceAccountEntry
 	Nodes           []NodeEntry
+	Users           []NamedEntry
+	Groups          []NamedEntry
 	Roles           []RoleEntry
 }
 
@@ -56,7 +60,7 @@ type ClusterVersion struct {
 	GitVersion string `json:"gitVersion"`
 }
 
-// RBAC info of a serviceAccount
+// ServiceAccountEntry holds the RBAC info of a serviceAccount
 type ServiceAccountEntry struct {
 	Name        string            `json:"name"`
 	Namespace   string            `json:"namespace"`
@@ -69,28 +73,34 @@ func (s *ServiceAccountEntry) Equals(name string, namespace string) bool {
 	return s.Name == name && s.Namespace == namespace
 }
 
-// RBAC info of a node
+// NodeEntry holds the RBAC info of a node
 type NodeEntry struct {
 	Name            string    `json:"name"`
 	Roles           []RoleRef `json:"roles"`
 	ServiceAccounts []string  `json:"serviceAccounts"`
 }
 
-// A Role or ClusterRole
+// NamedEntry marks an identity with roles denoted by only a name, like a user or a group
+type NamedEntry struct {
+	Name  string    `json:"name"`
+	Roles []RoleRef `json:"roles"`
+}
+
+// RoleEntry describes a Role or a ClusterRole
 type RoleEntry struct {
 	Name      string            `json:"name"`
 	Namespace string            `json:"namespace,omitempty"`
 	Rules     []rbac.PolicyRule `json:"rules"`
 }
 
-// The outcome of a roleBinding / clusterRoleBinding
+// RoleRef denotes the outcome of a RoleBinding or a ClusterRoleBinding
 type RoleRef struct {
 	Name               string `json:"name"`
 	Namespace          string `json:"namespace,omitempty"`
 	EffectiveNamespace string `json:"effectiveNamespace,omitempty"`
 }
 
-// List of pods on a node
+// NodeToPods list the pods on a node
 type NodeToPods struct {
 	Name string   `json:"name"`
 	Pods []string `json:"pods"`

@@ -13,7 +13,7 @@ import (
 var (
 	collectCmd = &cobra.Command{
 		Use:   "collect",
-		Short: "Collects the RBAC permissions of serviceAccounts, pods and nodes",
+		Short: "Collects the RBAC permissions of Kubernetes identities",
 		Run:   runCollect,
 	}
 )

@@ -3,11 +3,10 @@ import data.police_builtins as pb
 import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
-  desc := "SAs and nodes with cluster admin privileges pose a significant threat to the cluster if compromised"
+  desc := "Identities with cluster admin privileges pose a significant threat to the cluster if compromised"
   severity := "Critical"
 }
-checkServiceAccounts := true
-checkNodes := true
+targets := {"serviceAccounts", "nodes", "users", "groups"}
 
 evaluateRoles(roles, owner) {
   some role in roles

@@ -16,10 +16,11 @@ import (
 var (
 	evalConfig eval.EvalConfig
 	shortMode  bool
+	violations []string
 
 	evalCmd = &cobra.Command{
 		Use:   "eval <policies> [rbac-json]",
-		Short: "Evaulates RBAC permissions of serviceAccounts, pods and nodes using Rego policies",
+		Short: "Evaulates RBAC permissions of Kubernetes identities using Rego policies",
 		Run:   runEval,
 	}
 )
@@ -31,12 +32,6 @@ func runEval(cmd *cobra.Command, args []string) {
 		err           error
 	)
 
-	// Validate args and flags
-	if evalConfig.NoSaViolations && evalConfig.NoNodeViolations && evalConfig.NoCombinedViolations {
-		fmt.Println("[!] Cannot disable all violation types")
-		cmd.Help()
-		return
-	}
 	if len(args) < 1 {
 		fmt.Println("[!] No policies specified")
 		cmd.Help()
@@ -44,8 +39,42 @@ func runEval(cmd *cobra.Command, args []string) {
 	}
 	policyPath := args[0]
 
-	// Get RBAC JSON
+	if len(violations) == 0 {
+		fmt.Println("[!] Cannot disable all violation types")
+		cmd.Help()
+		return
+	}
+
+	// Set the violations user asked to search for
+	for _, violationType := range violations {
+		if violationType == "all" {
+			evalConfig.SaViolations = true
+			evalConfig.NodeViolations = true
+			evalConfig.CombinedViolations = true
+			evalConfig.UserViolations = true
+			evalConfig.GroupViolations = true
+			break
+		}
+		if violationType == "sa" || violationType == "sas" {
+			evalConfig.SaViolations = true
+		} else if violationType == "node" || violationType == "nodes" {
+			evalConfig.NodeViolations = true
+		} else if violationType == "combined" {
+			evalConfig.CombinedViolations = true
+		} else if violationType == "user" || violationType == "users" {
+			evalConfig.UserViolations = true
+		} else if violationType == "group" || violationType == "groups" {
+			evalConfig.GroupViolations = true
+		} else {
+			fmt.Printf("[!] Unrecognized violation type '%s', supported types are 'sa', 'node', 'combined', 'user', 'group' or 'all'\n", violationType)
+			cmd.Help()
+			return
+		}
+	}
+
+	// Get RBAC input
 	if len(args) > 1 {
+		// Read RBAC from file
 		if collectionOptionsSet() {
 			fmt.Println("[!] Can only set collection options when collecting")
 			cmd.Help()
@@ -61,6 +90,7 @@ func runEval(cmd *cobra.Command, args []string) {
 			return
 		}
 	} else {
+		// Collect RBAC from remote cluster
 		collectResultPtr := collect.Collect(collectConfig)
 		if collectResultPtr == nil {
 			return // error printed by Collect()
@@ -93,12 +123,10 @@ func runEval(cmd *cobra.Command, args []string) {
 func init() {
 	evalCmd.Flags().BoolVar(&shortMode, "short", false, "abbreviate results")
 	evalCmd.Flags().BoolVarP(&evalConfig.DebugMode, "debug", "d", false, "debug mode, prints debug info and stdout of policies")
-	evalCmd.Flags().BoolVar(&evalConfig.NoSaViolations, "no-sa-violations", false, "drop serviceAccount violations")
-	evalCmd.Flags().BoolVar(&evalConfig.NoNodeViolations, "no-node-violations", false, "drop node violations")
-	evalCmd.Flags().BoolVar(&evalConfig.NoCombinedViolations, "no-combined-violations", false, "drop combined violations")
 	evalCmd.Flags().BoolVar(&evalConfig.OnlySasOnAllNodes, "only-sas-on-all-nodes", false, "only evaluate serviceAccounts that exist on all nodes")
 	evalCmd.Flags().StringVarP(&evalConfig.SeverityThreshold, "severity-threshold", "s", "Low", "only evaluate policies with severity >= threshold")
 	evalCmd.Flags().StringSliceVar(&evalConfig.IgnoredNamespaces, "ignored-namespaces", []string{}, "ignore serviceAccounts from certain namespaces during eval") // TODO: consider moving to collect and implement via field selectors
+	evalCmd.Flags().StringSliceVar(&violations, "violations", []string{"sa", "node", "combined"}, "violations to search for, beside default supports 'user', 'group' and 'all'")
 
 	rootCmd.AddCommand(evalCmd)
 }

@@ -46,6 +46,8 @@ func Collect(collectConfig CollectConfig) *CollectResult {
 		Metadata:        *metadata,
 		ServiceAccounts: rbacDb.ServiceAccounts,
 		Nodes:           rbacDb.Nodes,
+		Users:           rbacDb.Users,
+		Groups:          rbacDb.Groups,
 		Roles:           rbacDb.Roles,
 	}
 }

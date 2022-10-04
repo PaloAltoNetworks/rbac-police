@@ -3,14 +3,13 @@ import data.police_builtins as pb
 import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
-  desc := sprintf("SAs and nodes that can create TokenRequests (serviceaccounts/token) in privileged namespaces (%v) can issue tokens for admin-equivalent SAs", [concat(", ", pb.privileged_namespaces)])
+  desc := sprintf("Identities that can create TokenRequests (serviceaccounts/token) in privileged namespaces (%v) can issue tokens for admin-equivalent SAs", [concat(", ", pb.privileged_namespaces)])
   severity := "Critical"
 }
-checkServiceAccounts := true
-checkNodes := true
+targets := {"serviceAccounts", "nodes", "users", "groups"}
 
 evaluateRoles(roles, owner) {
-  not pb.blockedByNodeRestriction(owner)
+  not pb.nodeRestrictionEnabledAndIsNode(owner)
   some role in roles
   pb.affectsPrivNS(role)
   some rule in role.rules

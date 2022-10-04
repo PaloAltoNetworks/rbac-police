@@ -3,12 +3,10 @@ import data.police_builtins as pb
 import future.keywords.in
 
 describe[{"desc": desc, "severity": severity}] {
-  desc := sprintf("SAs and nodes that can delete or evict pods in privileged namespaces (%v) and also make other nodes unschedulable can steal powerful pods from other nodes onto a compromised one", [concat(", ", pb.privileged_namespaces)])
+  desc := sprintf("Identities that can delete or evict pods in privileged namespaces (%v) and also make other nodes unschedulable can steal powerful pods from other nodes onto a compromised one", [concat(", ", pb.privileged_namespaces)])
   severity := "High"
 }
-checkCombined := true
-checkServiceAccounts := true
-checkNodes := true
+targets := {"serviceAccounts", "nodes", "combined", "users", "groups"}
 
 evaluateRoles(roles, owner) {
   rolesCanRemovePodsInPrivNS(roles, owner)
@@ -66,7 +64,7 @@ rolesCanRemovePodsInPrivNS(roles, owner) {
 }
 
 rolesCanMakeNodesUnschedulable(roles, owner) {
-  not pb.blockedByNodeRestriction(owner)
+  not pb.nodeRestrictionEnabledAndIsNode(owner)
   rule := roles[_].rules[_]
   nodeOrNodeStatus(rule.resources)
   pb.updateOrPatchOrWildcard(rule.verbs)
@@ -83,11 +81,11 @@ roleCanRemovePods(role, roleOwner) {
 # Permissions that would allow one to remove a pod
 ruleCanRemovePods(rule, ruleOwner) {
   # Check perms that allow removal but may be blocked by NodeRestriction
-  not pb.blockedByNodeRestriction(ruleOwner)
+  not pb.nodeRestrictionEnabledAndIsNode(ruleOwner)
   ruleCanRemovePodsInner(rule)
 } {
   # Check perms that allow removal but may be blocked by NodeRestriction from v1.17
-  not pb.blockedByNodeRestrictionV117(ruleOwner)
+  not pb.nodeRestrictionV117EnabledAndIsNode(ruleOwner)
   pb.subresourceOrWildcard(rule.resources, "pods/status")
   pb.updateOrPatchOrWildcard(rule.verbs)
 }

@@ -2,11 +2,10 @@ package policy
 import data.police_builtins as pb
 
 describe[{"desc": desc, "severity": severity}] {
-  desc := "SAs and nodes that can modify services/status may set the status.loadBalancer.ingress.ip field to exploit the unfixed CVE-2020-8554 and launch MiTM attacks against the cluster. Most mitigations for CVE-2020-8554 only prevent ExternalIP services"
+  desc := "Identities that can modify services/status may set the status.loadBalancer.ingress.ip field to exploit the unfixed CVE-2020-8554 and launch MiTM attacks against the cluster. Most mitigations for CVE-2020-8554 only prevent ExternalIP services"
   severity := "Medium"
 }
-checkServiceAccounts := true
-checkNodes := true
+targets := {"serviceAccounts", "nodes", "users", "groups"}
 
 evaluateRoles(roles, owner) {
   rule := roles[_].rules[_]
