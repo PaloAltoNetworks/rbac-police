@@ -51,11 +51,14 @@ func runExpand(cmd *cobra.Command, args []string) {
 		collectResult = *collectResultPtr
 	}
 
+	// Expand collection results
 	expandResult := expand.Expand(collectResult)
 	if expandResult == nil {
 		return // error printed by Expand()
 	}
-	output, err := json.MarshalIndent(expandResult, "", "    ")
+
+	// Output expand results
+	output, err := marshalResults(expandResult)
 	if err != nil {
 		log.Errorln("runExpand: failed to marshal results with", err)
 		return

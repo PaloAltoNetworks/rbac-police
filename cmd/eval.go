@@ -104,14 +104,14 @@ func runEval(cmd *cobra.Command, args []string) {
 	}
 
 	if !shortMode {
-		output, err = json.MarshalIndent(policyResults, "", "    ")
+		output, err = marshalResults(policyResults)
 		if err != nil {
 			log.Errorln("runEval: failed to marshal results with", err)
 			return
 		}
 	} else {
 		abbreviatedResults := eval.AbbreviateResults(policyResults)
-		output, err = json.MarshalIndent(abbreviatedResults, "", "    ")
+		output, err = marshalResults(abbreviatedResults)
 		if err != nil {
 			log.Errorln("runEval: failed to marshal abbreviated results with", err)
 			return

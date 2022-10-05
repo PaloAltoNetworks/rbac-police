@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
-
 	"github.com/PaloAltoNetworks/rbac-police/pkg/collect"
 	"github.com/spf13/cobra"
 
@@ -23,9 +21,11 @@ func runCollect(cmd *cobra.Command, args []string) {
 	if collectResult == nil {
 		return // error printed by Collect()
 	}
-	output, err := json.Marshal(collectResult)
+
+	// Output collect results
+	output, err := marshalResults(collectResult)
 	if err != nil {
-		log.Errorln("runCollect: failed to marshal results with", err)
+		log.Errorln("runCollect: failed to marshal collectResult with", err)
 		return
 	}
 	outputResults(output)
