@@ -13,6 +13,7 @@ Global Flags:
   -a, --all-serviceaccounts    collect data on all serviceAccounts, not only those assigned to a pod
   -w, --discover-protections   discover features gates and admission controllers that protect against certain attacks, partly by emulating the attacks via impersonation & dry-run write operations
       --ignore-controlplane    don't collect data on control plane nodes and pods. Identified by either the 'node-role.kubernetes.io/control-plane' or 'node-role.kubernetes.io/master' labels. ServiceAccounts will not be linked to control plane components
+  -j, --json-indent uint       json indent, 0 means compact mode (default 4)
       --local-dir string       offline mode, get cluster data from local files, see <rbac-police>/utils/get_cluster_data.sh
   -l, --loud                   loud mode, print results regardless of -o
   -n, --namespace string       scope collection on serviceAccounts to a namespace
