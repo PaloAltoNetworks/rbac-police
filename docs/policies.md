@@ -4,7 +4,7 @@ Policies are [Rego](https://www.openpolicyagent.org/docs/latest/policy-language/
 - **Nodes**: Nodes that violate the policy based on their permissions.
 - **Users**: Users that violate the policy based on their permissions.
 - **Groups**: Groups that violate the policy based on their permissions.
-- **Combined**: Nodes that violate the policy based on the union of their permissions and the permissions of the service accounts they host.
+- **Combined**: Nodes that violate the policy based on the union of their permissions and those of the service account tokens they host.
 
 The [policy library](./lib) includes ~20 policies that alert on identities possessing risky permissions, each detecting a different attack path.
 
