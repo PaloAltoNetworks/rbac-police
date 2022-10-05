@@ -6,7 +6,7 @@ Policies are [Rego](https://www.openpolicyagent.org/docs/latest/policy-language/
 - **Groups**: Groups that violate the policy based on their permissions.
 - **Combined**: Nodes that violate the policy based on the union of their permissions and those of the service account tokens they host.
 
-The [policy library](./lib) includes ~20 policies that alert on identities possessing risky permissions, each detecting a different attack path.
+The [policy library](../lib) includes ~20 policies that alert on identities possessing risky permissions, each detecting a different attack path.
 
 ## Writing Custom Policies
 Policies are written in Rego, and receive input in the [schema](./collect.md#output-schema) produced by `rbac-police collect`. Policies should define a `describe` rule, at least one violation type they produce, and an evaluator. Below is the [nodes_proxy](../lib/nodes_proxy.rego) policy for example:
