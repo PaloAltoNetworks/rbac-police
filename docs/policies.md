@@ -9,7 +9,7 @@ Policies are [Rego](https://www.openpolicyagent.org/docs/latest/policy-language/
 The [policy library](./lib) includes ~20 policies that alert on identities possessing risky permissions, each detecting a different attack path.
 
 ## Writing Custom Policies
-Policies are written in Rego, and receive input in the schema produced by `rbac-police collect`, as defined in [collect.md](./collect.md). Policies should define a `describe` rule, at least one violation type they produce, alongside one or two evaluators. Below is the [nodes_proxy](../lib/nodes_proxy.rego) policy, for example.
+Policies are written in Rego, and receive input in the [schema](./collect.md#output-schema) produced by `rbac-police collect`. Policies should define a `describe` rule, at least one violation type they produce, and an evaluator. Below is the [nodes_proxy](../lib/nodes_proxy.rego) policy for example:
 
 ```rego
 package policy
@@ -32,11 +32,11 @@ evaluateRoles(roles, owner) {
 - A policy must start with `package policy`.
 - A policy can import a number of built-in utility functions from [builtins.rego](../lib/utils/builtins.rego) via `import data.police_builtins`.
 - The `describe` rule defines the description and severity of the policy.
-- The `targets` set configures which identities the policy evaluates.
-- The `evaluateRoles` function receives the `roles` of a serviceAccount, node, user, or group and based on them determines whether it violates the policy.
+- The `targets` set configures which identities the policy evaluates and produces violations for.
+- The `evaluateRoles` function receives the `roles` of a serviceAccount, node, user, or group, and based on them determines whether it violates the policy.
 - Policies can define an `evalute_combined` rule to produce combined violations. See [approve_csrs](../lib/approve_csrs.rego) for an example.
 
-The above options are implemented by a Rego [wrapper](../lib/utils/wrapper.rego). If more control over execution is needed, a policy can be written to run independently, without the wrapper. See the [providerIAM](../lib/providerIAM.rego) policy for an example.
+The above options are implemented by a Rego [wrapper](../lib/utils/wrapper.rego). If full control over the execution is needed, a policy can be written to run independently, without the wrapper. See the [providerIAM](../lib/providerIAM.rego) policy for an example.
 
 ## Policy Library
 ### [approve_csrs](../lib/approve_csrs.rego)
