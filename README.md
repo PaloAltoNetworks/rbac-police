@@ -1,5 +1,5 @@
 # rbac-police <img src="./docs/logo.png" width="50">
-Retrieve the RBAC permissions of identities (service accounts, pods, nodes, users and groups) in a Kubernetes cluster, and evaluate them using policies written in Rego.
+Retrieve the RBAC permissions of Kubernetes identities - service accounts, pods, nodes, users and groups - and evaluate them using policies written in Rego.
 
 The [policy library](./lib) includes ~20 policies that identify identities possessing risky permissions, each detecting a different attack path. See the Recommendations section [here](https://www.paloaltonetworks.com/resources/whitepapers/kubernetes-privilege-escalation-excessive-permissions-in-popular-platforms) for advice on addressing powerful permissions in Kubernetes clusters.
 
