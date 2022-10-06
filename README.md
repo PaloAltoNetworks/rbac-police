@@ -36,16 +36,17 @@ Only evaluate policies with a severity equal to or higher than a threshold.
 ```
 ./rbac-police eval lib/ -s High
 ```
-### Scope to a namespace
-Only look into service accounts and pods from a certain namespace.
-```
-./rbac-police eval lib/ -n production
-```
 ### Configure violation types
 Configure which identities are evaluated for violations, default are `sa,node,combined`.
 ```
 ./rbac-police eval lib/ --violations sa,user
 ./rbac-police eval lib/ --violations all  # sa,node,combined,user,group
+```
+Note that by default, `rbac-police` only considers service accounts that are assigned to a pod. Use `-a` to include all service accounts.
+### Scope to a namespace
+Only look into service accounts and pods from a certain namespace.
+```
+./rbac-police eval lib/ -n production
 ```
 ### Only alert on SAs that exist on all nodes
 Only consider violations from service accounts that exist on all nodes. Useful for identifying violating DaemonSets.
