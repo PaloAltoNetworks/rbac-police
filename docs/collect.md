@@ -117,7 +117,7 @@ Global Flags:
     ],
     "roles": [
         {
-            "name": "role or clusterrole referenced by an SA or node",
+            "name": "role or clusterrole referenced by an identity (SA, node, user or group)",
             "namespace": "role's namespace", // omitempty
             "rules": [] // k8s rule format   
         },
