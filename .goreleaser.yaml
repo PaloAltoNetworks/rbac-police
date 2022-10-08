@@ -12,8 +12,6 @@ builds:
     goarch:
       - amd64
       - arm64
-    flags:
-      - -buildmode=pie
 archives:
   - builds:
       - rbac-police
