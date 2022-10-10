@@ -10,7 +10,7 @@ def main(policy_path, output_path):
         targets = []
         line_to_insert_targets = -1
 
-        # Iterate policy files
+        # Iterate policy file
         for i, line in enumerate(policy_file):
             # Exit if policy is already in the new format
             if defined_as_rego_set(line, "targets"):
