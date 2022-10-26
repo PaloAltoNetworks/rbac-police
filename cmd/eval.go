@@ -14,15 +14,15 @@ import (
 
 // evalCmd represents the eval command
 var (
-	evalConfig eval.EvalConfig
-	shortMode  bool
-	violations []string
-
 	evalCmd = &cobra.Command{
 		Use:   "eval <policies> [rbac-json]",
 		Short: "Evaulates RBAC permissions of Kubernetes identities using Rego policies",
 		Run:   runEval,
 	}
+
+	evalConfig eval.EvalConfig
+	shortMode  bool
+	violations []string
 )
 
 func runEval(cmd *cobra.Command, args []string) {

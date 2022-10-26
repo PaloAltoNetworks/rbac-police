@@ -8,6 +8,7 @@ Usage:
 
 Flags:
   -h, --help   help for expand
+  -z, --zoom string   only show the permissions of the specified identity, format is 'type=identity', e.g. 'sa=kube-system:default', 'user=example@email.com'
 
 Global Flags:
   -a, --all-serviceaccounts    collect data on all serviceAccounts, not only those assigned to a pod

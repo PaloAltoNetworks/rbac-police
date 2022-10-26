@@ -65,11 +65,6 @@ Ignore control plane pods and nodes in clusters that host the control plane.
 ```
 ./rbac-police eval lib/ --ignore-controlplane
 ```
-### Nodes don't use NodeAuthorizer
-Specify a custom user used by nodes in clusters that don't use the NodeAuthorizer.
-```
-./rbac-police eval lib/ --node-user=nodeclient
-```
 ### Collect once for multiple evaluations
 ```
 ./rbac-police collect -o rbacDb.json
@@ -84,6 +79,12 @@ Or:
 ```
 ./rbac-police collect -o rbacDb.json
 ./rbac-police expand rbacDb.json
+```
+### View the permissions of a specific identity
+Inspect the permissions of a single identity.
+```
+./rbac-police expand -z sa=kube-system:metrics-server
+./rbac-police expand -z user=example@email.com
 ```
 
 ## Documentation
