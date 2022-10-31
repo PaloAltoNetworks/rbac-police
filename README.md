@@ -38,27 +38,33 @@ Only evaluate policies with a severity equal to or higher than a threshold.
 ```
 ./rbac-police eval lib/ -s High
 ```
+### Inspect the permissions of a specific identity
+```
+./rbac-police expand -z sa=kube-system:metrics-server
+./rbac-police expand -z user=example@email.com
+./rbac-police expand  # all identities
+```
+### Discover protections
+Improve accuracy by considering features gates and admission controllers that can protect against certain attacks. Note that [NodeRestriction](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#noderestriction) is identified by impersonating a node and *dry-run creating a pod*, which may be logged by some systems.
+```
+./rbac-police eval lib/ -w
+```
 ### Configure violation types
-Configure which identities are evaluated for violations, default are `sa,node,combined`.
+Control which identities are evaluated for violations, default are `sa,node,combined` (see [policies.md](docs/policies.md) for more information).
 ```
 ./rbac-police eval lib/ --violations sa,user
 ./rbac-police eval lib/ --violations all  # sa,node,combined,user,group
 ```
-Note that by default, `rbac-police` only considers service accounts that are assigned to a pod. Use `-a` to include all service accounts.
+Note that by default, `rbac-police` only looks into service accounts assigned to a pod. Use `-a` to include all service accounts.
 ### Scope to a namespace
 Only look into service accounts and pods from a certain namespace.
 ```
 ./rbac-police eval lib/ -n production
 ```
-### Only alert on SAs that exist on all nodes
-Only consider violations from service accounts that exist on all nodes. Useful for identifying violating DaemonSets.
+### Only SAs that exist on all nodes
+Only alert on service accounts that exist on all nodes. Useful for identifying violating DaemonSets.
 ```
 ./rbac-police eval lib/ --only-sas-on-all-nodes
-```
-### Discover protections
-Improve accuracy by identifying security-related features gates and admission controllers that can protect against certain attacks. Please note that [NodeRestriction](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#noderestriction) is identified by impersonating a node and *dry-run creating a pod*, which may be logged by some systems.
-```
-./rbac-police eval lib/ -w
 ```
 ### Ignore control plane
 Ignore control plane pods and nodes in clusters that host the control plane.
@@ -68,23 +74,10 @@ Ignore control plane pods and nodes in clusters that host the control plane.
 ### Collect once for multiple evaluations
 ```
 ./rbac-police collect -o rbacDb.json
-./rbac-police eval lib/ rbacDb.json -s Critical
-./rbac-police eval lib/ rbacDb.json --only-sas-on-all-nodes
-```
-### Manually inspect RBAC permissions
-```
-./rbac-police expand
-```
-Or:
-```
-./rbac-police collect -o rbacDb.json
-./rbac-police expand rbacDb.json
-```
-### View the permissions of a specific identity
-Inspect the permissions of a single identity.
-```
-./rbac-police expand -z sa=kube-system:metrics-server
-./rbac-police expand -z user=example@email.com
+
+./rbac-police eval lib/ rbacDb.json -s High
+./rbac-police eval lib/ rbacDb.json -s Medium --only-sas-on-all-nodes
+./rbac-police expand rbacDb.json -z sa=ns:violating-sa
 ```
 
 ## Documentation
