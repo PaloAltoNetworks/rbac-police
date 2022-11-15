@@ -3,7 +3,7 @@ Retrieve the RBAC permissions of Kubernetes identities - service accounts, pods,
 
 ![example](docs/example.png)
 
-The [policy library](./lib) includes ~20 policies that identify identities possessing risky permissions, each detecting a different attack path. See the Recommendations section [here](https://www.paloaltonetworks.com/resources/whitepapers/kubernetes-privilege-escalation-excessive-permissions-in-popular-platforms) for advice on addressing powerful permissions in Kubernetes clusters.
+The [policy library](./lib) includes over 20 policies that detect identities possessing risky permissions, each alerting on a different attack path. 
 
 ## Quick Start
 
@@ -31,6 +31,10 @@ The [policy library](./lib) includes ~20 policies that identify identities posse
     ```
     ./rbac-police eval lib/
     ```
+5. Inspect the permissions of violating principals and identify the Roles and ClusterRoles granting them risky privileges. See the Recommendations section [here](https://www.paloaltonetworks.com/resources/whitepapers/kubernetes-privilege-escalation-excessive-permissions-in-popular-platforms) for remediation advice. 
+    ```
+    ./rbac-police expand -z sa=production-ns:violating-sa
+    ```
 
 ## Usage
 ### Set severity threshold
@@ -38,11 +42,11 @@ Only evaluate policies with a severity equal to or higher than a threshold.
 ```
 ./rbac-police eval lib/ -s High
 ```
-### Inspect the permissions of a specific identity
+### Inspect the permissions of specific identities
 ```
 ./rbac-police expand -z sa=kube-system:metrics-server
 ./rbac-police expand -z user=example@email.com
-./rbac-police expand  # all identities
+./rbac-police expand # all identities
 ```
 ### Discover protections
 Improve accuracy by considering features gates and admission controllers that can protect against certain attacks. Note that [NodeRestriction](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#noderestriction) is identified by impersonating a node and *dry-run creating a pod*, which may be logged by some systems.
@@ -53,7 +57,7 @@ Improve accuracy by considering features gates and admission controllers that ca
 Control which identities are evaluated for violations, default are `sa,node,combined` (see [policies.md](docs/policies.md) for more information).
 ```
 ./rbac-police eval lib/ --violations sa,user
-./rbac-police eval lib/ --violations all  # sa,node,combined,user,group
+./rbac-police eval lib/ --violations all # sa,node,combined,user,group
 ```
 Note that by default, `rbac-police` only looks into service accounts assigned to a pod. Use `-a` to include all service accounts.
 ### Scope to a namespace
