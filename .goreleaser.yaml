@@ -26,4 +26,4 @@ snapshot:
 changelog:
  filters:
     exclude:
-      - [Tt]ypos?
+      - typos?
