@@ -9,6 +9,7 @@ builds:
     goos:
       - linux
       - darwin
+      - windows
     goarch:
       - amd64
       - arm64
@@ -25,4 +26,4 @@ snapshot:
 changelog:
  filters:
     exclude:
-      - [Tt]ypos?
+      - "[Tt]ypos?"
