@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path/filepath"
+	"strings"
+
 	"github.com/open-policy-agent/opa/storage"
 	"github.com/open-policy-agent/opa/storage/inmem"
-	"strings"
 
 	"github.com/PaloAltoNetworks/rbac-police/pkg/collect"
 	"github.com/PaloAltoNetworks/rbac-police/pkg/utils"
@@ -25,12 +27,16 @@ var (
 		"ignore": {},
 		"utils":  {},
 	}
-	severityMap     = map[string]int{"Low": 1, "Medium": 2, "High": 3, "Critical": 4, "": 5}
-	builtinsLibPath = "lib/utils/builtins.rego" // TODO: move out of eval.go / make configurable / go-bindata
+	severityMap       = map[string]int{"Low": 1, "Medium": 2, "High": 3, "Critical": 4, "": 5}
+	builtinsLibPath   string
+	builtinsLibSuffix = "utils/builtins.rego" // TODO: move out of eval.go / make configurable / go-bindata
 )
 
 // Evaluates RBAC permissions using Rego policies
 func Eval(policyPath string, collectResult collect.CollectResult, evalConfig EvalConfig) *PolicyResults {
+	builtinsLibPath = filepath.Join(policyPath, builtinsLibSuffix)
+	wrapperFilePath = filepath.Join(policyPath, wrapperFileSuffix)
+
 	// Set debug mode
 	if evalConfig.DebugMode {
 		log.SetLevel(log.DebugLevel)
@@ -196,7 +202,7 @@ func evaluatePolicy(policyFile string, input interface{}, policyConfig string, e
 
 	// Wrap policy if needed
 	if policyNeedsWrapping(policy) {
-		regoFiles = append([]string{wrapperFile}, regoFiles...)
+		regoFiles = append([]string{wrapperFilePath}, regoFiles...)
 		queryStr = "data.wrapper.main[_]"
 	} else {
 		queryStr = "data.policy.main[_]"
