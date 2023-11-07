@@ -303,7 +303,7 @@ func removedUnneededIdentities(collectResult *collect.CollectResult, evalConfig 
 		collectResult.Users = []collect.NamedEntry{}
 	}
 	if !evalConfig.GroupViolations {
-		collectResult.Users = []collect.NamedEntry{}
+		collectResult.Groups = []collect.NamedEntry{}
 	}
 }
 
