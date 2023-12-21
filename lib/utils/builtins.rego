@@ -140,6 +140,17 @@ podControllerApiGroup(apiGroups) {
   hasWildcard(apiGroups)
 }
 
+
+# True if @resources includes either 'clusterroles', 'roles', or a wildcard
+rolesOrClusterroles(resources) {
+  "clusterroles" in resources
+} { 
+  "roles" in resources
+} {
+  hasWildcard(resources)
+}
+
+
 # Return the roles referenced by @roleRefs
 effectiveRoles(roleRefs) = effectiveRoles {
   effectiveRoles := { effectiveRole | 
