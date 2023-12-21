@@ -12,15 +12,7 @@ evaluateRoles(roles, owner) {
   some role in roles
   pb.affectsPrivNS(role)
   some rule in role.rules
-  rolesOrClusterroles(rule.resources)
+  pb.rolesOrClusterroles(rule.resources)
   pb.valueOrWildcard(rule.verbs, "escalate")
   pb.valueOrWildcard(rule.apiGroups, "rbac.authorization.k8s.io")
-}
-
-rolesOrClusterroles(resources) {
-  "clusterroles" in resources
-} { 
-  "roles" in resources
-} {
-  pb.hasWildcard(resources)
 }
